@@ -1,16 +1,22 @@
-import express from "express";
-import { getPatientByPhone, registerPatient } from "../storage/patients";
+import { Router } from "express";
+import { authenticateToken, authorizeRoles } from "@/middleware/auth";
+import type { AuthenticatedRequest } from "@/types";
+import * as appointmentsService from "@/services/appointments.service";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/:phone", async (req, res) => {
-  const patient = await getPatientByPhone(req.params.phone);
-  res.json({ patient });
-});
-
-router.post("/", async (req, res) => {
-  const patient = await registerPatient(req.body);
-  res.json({ patient });
-});
+router.post(
+  "/appointments",
+  authenticateToken,
+  authorizeRoles("PATIENT"),
+  async (req: AuthenticatedRequest, res) => {
+    const patientId = req.user!.id;
+    const appointment = await appointmentsService.bookAppointment({
+      ...req.body,
+      patientId,
+    });
+    res.json(appointment);
+  }
+);
 
 export default router;

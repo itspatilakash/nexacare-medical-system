@@ -1,16 +1,17 @@
-import express from "express";
-import { getReceptionistsByHospital, registerReceptionist } from "../storage/receptionists";
+import { Router } from "express";
+import { authenticateToken, authorizeRoles } from "@/middleware/auth";
+import type { AuthenticatedRequest } from "@/types";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/hospital/:hospitalId", async (req, res) => {
-  const staff = await getReceptionistsByHospital(req.params.hospitalId);
-  res.json({ staff });
-});
-
-router.post("/", async (req, res) => {
-  const receptionist = await registerReceptionist(req.body);
-  res.json({ receptionist });
-});
+router.get(
+  "/walkins",
+  authenticateToken,
+  authorizeRoles("RECEPTIONIST"),
+  async (req: AuthenticatedRequest, res) => {
+    const receptionistId = req.user!.id;
+    res.json([]); // Replace with real logic
+  }
+);
 
 export default router;

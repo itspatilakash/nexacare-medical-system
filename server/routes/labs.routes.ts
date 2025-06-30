@@ -1,16 +1,18 @@
-import express from "express";
-import { getLabsByHospital, registerLab } from "../storage/labs";
+import { Router } from "express";
+import { authenticateToken, authorizeRoles } from "@/middleware/auth";
+import type { AuthenticatedRequest } from "@/types";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/hospital/:hospitalId", async (req, res) => {
-  const labs = await getLabsByHospital(req.params.hospitalId);
-  res.json({ labs });
-});
-
-router.post("/", async (req, res) => {
-  const lab = await registerLab(req.body);
-  res.json({ lab });
-});
+router.get(
+  "/me/reports",
+  authenticateToken,
+  authorizeRoles("LAB"),
+  async (req: AuthenticatedRequest, res) => {
+    const labId = req.user!.id;
+    // fetch lab reports for this lab
+    res.json([]); // Replace with real logic
+  }
+);
 
 export default router;
