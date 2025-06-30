@@ -7,6 +7,8 @@ import patientsRoutes from "./patients.routes";
 import labsRoutes from "./labs.routes";
 import receptionRoutes from "./reception.routes";
 import appointmentsRoutes from "./appointments.routes";
+import { Router } from "express";
+
 
 export async function registerRoutes(app: Express) {
   app.use("/api/auth", authRoutes);
