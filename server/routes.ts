@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
-import { storage } from "./storage";
+import { storage } from ".";
 import { 
   registrationSchema, 
   loginSchema, 
