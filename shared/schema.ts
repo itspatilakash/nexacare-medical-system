@@ -1,20 +1,31 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, uuid } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  varchar,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  decimal,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table - central auth table for all roles
+// Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  mobileNumber: text("mobile_number").notNull().unique(),
-  password: text("password").notNull(),
-  fullName: text("full_name").notNull(),
-  role: text("role").notNull(), // 'hospital', 'doctor', 'patient', 'lab', 'receptionist'
+  fullName: varchar("full_name", { length: 255 }).notNull(),
+  mobileNumber: varchar("mobile_number", { length: 20 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull(),
   isVerified: boolean("is_verified").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-// Hospitals table
+// Hospitals
 export const hospitals = pgTable("hospitals", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -28,15 +39,15 @@ export const hospitals = pgTable("hospitals", {
   website: text("website"),
   establishedYear: integer("established_year"),
   totalBeds: integer("total_beds"),
-  departments: text("departments"), // JSON array as text
-  services: text("services"), // JSON array as text
-  operatingHours: text("operating_hours"), // JSON object as text
+  departments: text("departments"),
+  services: text("services"),
+  operatingHours: text("operating_hours"),
   emergencyServices: boolean("emergency_services").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Doctors table
+// Doctors
 export const doctors = pgTable("doctors", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -44,27 +55,27 @@ export const doctors = pgTable("doctors", {
   specialty: text("specialty").notNull(),
   licenseNumber: text("license_number").notNull(),
   qualification: text("qualification").notNull(),
-  experience: integer("experience"), // years
+  experience: integer("experience"),
   consultationFee: decimal("consultation_fee", { precision: 10, scale: 2 }),
-  workingHours: text("working_hours"), // JSON object as text
-  availableSlots: text("available_slots"), // JSON array as text
-  status: text("status").default('in'), // 'in', 'out', 'break', 'busy'
-  languages: text("languages"), // JSON array as text
-  awards: text("awards"), // JSON array as text
+  workingHours: text("working_hours"),
+  availableSlots: text("available_slots"),
+  status: text("status").default("in"),
+  languages: text("languages"),
+  awards: text("awards"),
   bio: text("bio"),
   isAvailable: boolean("is_available").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Patients table
+// Patients
 export const patients = pgTable("patients", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   dateOfBirth: timestamp("date_of_birth"),
   gender: text("gender"),
   bloodGroup: text("blood_group"),
-  height: decimal("height", { precision: 5, scale: 2 }), // in cm
-  weight: decimal("weight", { precision: 5, scale: 2 }), // in kg
+  height: decimal("height", { precision: 5, scale: 2 }),
+  weight: decimal("weight", { precision: 5, scale: 2 }),
   address: text("address"),
   city: text("city"),
   state: text("state"),
@@ -74,8 +85,8 @@ export const patients = pgTable("patients", {
   emergencyRelation: text("emergency_relation"),
   medicalHistory: text("medical_history"),
   allergies: text("allergies"),
-  currentMedications: text("current_medications"), // JSON array as text
-  chronicConditions: text("chronic_conditions"), // JSON array as text
+  currentMedications: text("current_medications"),
+  chronicConditions: text("chronic_conditions"),
   insuranceProvider: text("insurance_provider"),
   insuranceNumber: text("insurance_number"),
   occupation: text("occupation"),
@@ -83,7 +94,7 @@ export const patients = pgTable("patients", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Labs table
+// Labs
 export const labs = pgTable("labs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -95,31 +106,31 @@ export const labs = pgTable("labs", {
   zipCode: text("zip_code").notNull(),
   licenseNumber: text("license_number").notNull(),
   contactEmail: text("contact_email"),
-  operatingHours: text("operating_hours"), // JSON object as text
-  specializations: text("specializations"), // JSON array as text
-  testCategories: text("test_categories"), // JSON array as text
-  equipment: text("equipment"), // JSON array as text
-  accreditation: text("accreditation"), // JSON array as text
+  operatingHours: text("operating_hours"),
+  specializations: text("specializations"),
+  testCategories: text("test_categories"),
+  equipment: text("equipment"),
+  accreditation: text("accreditation"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Receptionists table
+// Receptionists
 export const receptionists = pgTable("receptionists", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   hospitalId: integer("hospital_id").references(() => hospitals.id).notNull(),
   employeeId: text("employee_id"),
   department: text("department"),
-  shift: text("shift"), // 'morning', 'evening', 'night'
-  workingHours: text("working_hours"), // JSON object as text
-  permissions: text("permissions"), // JSON array as text
+  shift: text("shift"),
+  workingHours: text("working_hours"),
+  permissions: text("permissions"),
   dateOfJoining: timestamp("date_of_joining"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Appointments table
+// Appointments
 export const appointments = pgTable("appointments", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
@@ -128,34 +139,34 @@ export const appointments = pgTable("appointments", {
   receptionistId: integer("receptionist_id").references(() => receptionists.id),
   appointmentDate: timestamp("appointment_date").notNull(),
   appointmentTime: text("appointment_time").notNull(),
-  timeSlot: text("time_slot").notNull(), // e.g., "10:00-10:30"
+  timeSlot: text("time_slot").notNull(),
   reason: text("reason").notNull(),
-  status: text("status").default('pending'), // 'pending', 'confirmed', 'completed', 'cancelled', 'no-show'
-  type: text("type").default('online'), // 'online', 'walk-in'
-  priority: text("priority").default('normal'), // 'emergency', 'urgent', 'normal'
+  status: text("status").default("pending"),
+  type: text("type").default("online"),
+  priority: text("priority").default("normal"),
   symptoms: text("symptoms"),
   notes: text("notes"),
   confirmedAt: timestamp("confirmed_at"),
   completedAt: timestamp("completed_at"),
-  createdBy: integer("created_by").references(() => users.id), // receptionist or patient
+  createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Prescriptions table
+// Prescriptions
 export const prescriptions = pgTable("prescriptions", {
   id: serial("id").primaryKey(),
   appointmentId: integer("appointment_id").references(() => appointments.id),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
   doctorId: integer("doctor_id").references(() => doctors.id).notNull(),
   diagnosis: text("diagnosis").notNull(),
-  medications: text("medications").notNull(), // JSON array as text
+  medications: text("medications").notNull(),
   instructions: text("instructions"),
   followUpDate: timestamp("follow_up_date"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Lab Reports table
+// Lab Reports
 export const labReports = pgTable("lab_reports", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
@@ -163,16 +174,16 @@ export const labReports = pgTable("lab_reports", {
   labId: integer("lab_id").references(() => labs.id).notNull(),
   testName: text("test_name").notNull(),
   testType: text("test_type").notNull(),
-  results: text("results").notNull(), // JSON as text
-  normalRanges: text("normal_ranges"), // JSON as text
+  results: text("results").notNull(),
+  normalRanges: text("normal_ranges"),
   reportDate: timestamp("report_date").notNull(),
-  reportUrl: text("report_url"), // for file uploads
-  status: text("status").default('pending'), // 'pending', 'completed', 'reviewed'
+  reportUrl: text("report_url"),
+  status: text("status").default("pending"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// OTP table for registration
+// OTPs
 export const otpVerifications = pgTable("otp_verifications", {
   id: serial("id").primaryKey(),
   mobileNumber: text("mobile_number").notNull(),
@@ -182,20 +193,20 @@ export const otpVerifications = pgTable("otp_verifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Notifications table
+// Notifications
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  type: text("type").notNull(), // 'appointment_confirmed', 'appointment_cancelled', 'prescription_ready', etc.
+  type: text("type").notNull(),
   title: text("title").notNull(),
   message: text("message").notNull(),
-  relatedId: integer("related_id"), // appointment_id, prescription_id, etc.
-  relatedType: text("related_type"), // 'appointment', 'prescription', etc.
+  relatedId: integer("related_id"),
+  relatedType: text("related_type"),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Relations
+// RELATIONS
 export const usersRelations = relations(users, ({ one, many }) => ({
   hospital: one(hospitals, { fields: [users.id], references: [hospitals.userId] }),
   doctor: one(doctors, { fields: [users.id], references: [doctors.userId] }),
@@ -262,107 +273,61 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, { fields: [notifications.userId], references: [users.id] }),
 }));
 
-// Zod schemas for validation
+// ZOD VALIDATION SCHEMAS
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
 });
 
-export const insertHospitalSchema = createInsertSchema(hospitals).omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-});
-
-export const insertDoctorSchema = createInsertSchema(doctors).omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-});
-
-export const insertPatientSchema = createInsertSchema(patients).omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-});
-
-export const insertLabSchema = createInsertSchema(labs).omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-});
-
-export const insertReceptionistSchema = createInsertSchema(receptionists).omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-});
-
-export const insertAppointmentSchema = createInsertSchema(appointments).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertPrescriptionSchema = createInsertSchema(prescriptions).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertLabReportSchema = createInsertSchema(labReports).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertOtpSchema = createInsertSchema(otpVerifications).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertNotificationSchema = createInsertSchema(notifications).omit({
-  id: true,
-  createdAt: true,
-});
-
-// Registration schema with role
 export const registrationSchema = z.object({
   mobileNumber: z.string().min(10).max(15),
   fullName: z.string().min(2),
   role: z.enum(['hospital', 'doctor', 'patient', 'lab']),
 });
 
-// Login schema
 export const loginSchema = z.object({
   mobileNumber: z.string().min(10).max(15),
   password: z.string().min(6),
 });
 
-// OTP verification schema
 export const otpVerificationSchema = z.object({
   mobileNumber: z.string().min(10).max(15),
   otp: z.string().length(6),
   password: z.string().min(6),
 });
 
-// Type exports
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-export type InsertHospital = z.infer<typeof insertHospitalSchema>;
-export type Hospital = typeof hospitals.$inferSelect;
-export type InsertDoctor = z.infer<typeof insertDoctorSchema>;
-export type Doctor = typeof doctors.$inferSelect;
-export type InsertPatient = z.infer<typeof insertPatientSchema>;
-export type Patient = typeof patients.$inferSelect;
-export type InsertLab = z.infer<typeof insertLabSchema>;
-export type Lab = typeof labs.$inferSelect;
-export type InsertReceptionist = z.infer<typeof insertReceptionistSchema>;
-export type Receptionist = typeof receptionists.$inferSelect;
-export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
-export type Appointment = typeof appointments.$inferSelect;
-export type InsertPrescription = z.infer<typeof insertPrescriptionSchema>;
-export type Prescription = typeof prescriptions.$inferSelect;
-export type InsertLabReport = z.infer<typeof insertLabReportSchema>;
-export type LabReport = typeof labReports.$inferSelect;
-export type InsertOtp = z.infer<typeof insertOtpSchema>;
-export type OtpVerification = typeof otpVerifications.$inferSelect;
-export type InsertNotification = z.infer<typeof insertNotificationSchema>;
-export type Notification = typeof notifications.$inferSelect;
+// TYPES
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+
+export type InsertUser = InferInsertModel<typeof users>;
+export type User = InferSelectModel<typeof users>;
+
+export type InsertHospital = InferInsertModel<typeof hospitals>;
+export type Hospital = InferSelectModel<typeof hospitals>;
+
+export type InsertDoctor = InferInsertModel<typeof doctors>;
+export type Doctor = InferSelectModel<typeof doctors>;
+
+export type InsertPatient = InferInsertModel<typeof patients>;
+export type Patient = InferSelectModel<typeof patients>;
+
+export type InsertLab = InferInsertModel<typeof labs>;
+export type Lab = InferSelectModel<typeof labs>;
+
+export type InsertReceptionist = InferInsertModel<typeof receptionists>;
+export type Receptionist = InferSelectModel<typeof receptionists>;
+
+export type InsertAppointment = InferInsertModel<typeof appointments>;
+export type Appointment = InferSelectModel<typeof appointments>;
+
+export type InsertPrescription = InferInsertModel<typeof prescriptions>;
+export type Prescription = InferSelectModel<typeof prescriptions>;
+
+export type InsertLabReport = InferInsertModel<typeof labReports>;
+export type LabReport = InferSelectModel<typeof labReports>;
+
+export type InsertOtp = InferInsertModel<typeof otpVerifications>;
+export type OtpVerification = InferSelectModel<typeof otpVerifications>;
+
+export type InsertNotification = InferInsertModel<typeof notifications>;
+export type Notification = InferSelectModel<typeof notifications>;

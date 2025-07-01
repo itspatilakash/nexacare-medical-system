@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticateToken, authorizeRoles } from "@/middleware/auth";
-import type { AuthenticatedRequest } from "@/types";
+import type { AuthenticatedRequest } from "../types";
 
 const router = Router();
 

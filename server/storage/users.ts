@@ -11,10 +11,10 @@ export const findUserByEmail = async (email: string) => {
   return await db.select().from(users).where(eq(users.email, email)).limit(1);
 };
 
-export const findUserById = async (id: string) => {
+export const findUserById = async (id: number) => {
   return await db.select().from(users).where(eq(users.id, id)).limit(1);
 };
 
-export const deleteUserById = async (id: string) => {
+export const deleteUserById = async (id: number) => {
   return await db.delete(users).where(eq(users.id, id));
 };

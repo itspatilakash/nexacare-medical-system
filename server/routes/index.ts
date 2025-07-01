@@ -9,6 +9,13 @@ import receptionRoutes from "./reception.routes";
 import appointmentsRoutes from "./appointments.routes";
 import { Router } from "express";
 
+const router = Router();
+
+router.get("/health", (_, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+export default router;
 
 export async function registerRoutes(app: Express) {
   app.use("/api/auth", authRoutes);

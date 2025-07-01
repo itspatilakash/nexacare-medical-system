@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { authenticateToken, authorizeRoles } from "@/middleware/auth";
-import type { AuthenticatedRequest } from "@/types";
-import * as appointmentsService from "@/services/appointments.service";
+import { authenticateToken, authorizeRoles } from "../middleware/auth";
+import type { AuthenticatedRequest } from "../types";
+import * as appointmentsService from "../services/appointments.service";
 
 const router = Router();
 

@@ -1,6 +1,6 @@
 // server/services/doctors.service.ts
 import { db } from '../storage/db';
-import { getDoctors } from "../storage"; 
+import { doctors } from '../storage/db';
 import { eq } from 'drizzle-orm';
 
 export const getDoctorsByHospital = async (hospitalId: number) => {

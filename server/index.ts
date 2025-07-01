@@ -1,10 +1,19 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import routes from "./routes";
+import cors from "cors";
+import morgan from "morgan";
+import { errorHandler } from "./middleware/errorHandler";
+
 
 const app = express();
+app.use(cors());
+app.use(morgan("dev"));
+app.use("/api", routes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
 
 app.use((req: { path: any; method: any; }, res: { json: (bodyJson: any, ...args: any[]) => any; on: (arg0: string, arg1: () => void) => void; statusCode: any; }, next: () => void) => {
   const start = Date.now();
@@ -55,6 +64,13 @@ app.use((req: { path: any; method: any; }, res: { json: (bodyJson: any, ...args:
   } else {
     serveStatic(app);
   }
+
+  app.use(errorHandler);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
 
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
