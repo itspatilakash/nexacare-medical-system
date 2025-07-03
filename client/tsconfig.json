@@ -1,0 +1,19 @@
+// client/tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+       "@/*": ["src/*"]
+    },
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  "exclude": ["dist"]
+}

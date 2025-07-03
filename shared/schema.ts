@@ -45,6 +45,7 @@ export const hospitals = pgTable("hospitals", {
   emergencyServices: boolean("emergency_services").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  isVerified: boolean("is_verified").default(false),
 });
 
 // Doctors
@@ -65,6 +66,8 @@ export const doctors = pgTable("doctors", {
   bio: text("bio"),
   isAvailable: boolean("is_available").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  isVerified: boolean("is_verified").default(false),
+  approvalStatus: text("approval_status").default("pending"),
 });
 
 // Patients
@@ -113,6 +116,8 @@ export const labs = pgTable("labs", {
   accreditation: text("accreditation"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  isVerified: boolean("is_verified").default(false),
+  approvalStatus: text("approval_status").default("pending"),
 });
 
 // Receptionists
@@ -158,12 +163,14 @@ export const prescriptions = pgTable("prescriptions", {
   appointmentId: integer("appointment_id").references(() => appointments.id),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
   doctorId: integer("doctor_id").references(() => doctors.id).notNull(),
+  hospitalId: integer("hospital_id").references(() => hospitals.id).notNull(),
   diagnosis: text("diagnosis").notNull(),
   medications: text("medications").notNull(),
   instructions: text("instructions"),
   followUpDate: timestamp("follow_up_date"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"), // to see when doctor updated the given prescription
 });
 
 // Lab Reports
@@ -282,8 +289,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const registrationSchema = z.object({
   mobileNumber: z.string().min(10).max(15),
   fullName: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(6),
   role: z.enum(['hospital', 'doctor', 'patient', 'lab']),
 });
+
 
 export const loginSchema = z.object({
   mobileNumber: z.string().min(10).max(15),
@@ -295,6 +305,27 @@ export const otpVerificationSchema = z.object({
   otp: z.string().length(6),
   password: z.string().min(6),
 });
+export const insertHospitalSchema = createInsertSchema(hospitals).omit({
+  id: true,
+  createdAt: true,
+});
+export const insertOtpSchema = createInsertSchema(otpVerifications).omit({
+  id: true,
+  createdAt: true,
+  isUsed: true,
+});
+export const insertPatientSchema = createInsertSchema(patients).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPrescriptionSchema = createInsertSchema(prescriptions).omit({
+  id: true,
+  createdAt: true,
+});
+export const updatePrescriptionSchema = insertPrescriptionSchema.partial();
+
+
 
 // TYPES
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";

@@ -1,20 +1,20 @@
-import { db } from "./db";
-import { users } from "../../shared/schema";
-import { eq } from "drizzle-orm";
-import { InsertUser } from "../../shared/schema-types";
+// server/storage/users.ts
+import { db } from './db';
+import { users } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
-export const createUser = async (user: InsertUser) => {
-  return await db.insert(users).values(user).returning();
+export const createUser = async (data: Omit<typeof users.$inferInsert, 'id' | 'createdAt'>) => {
+  return await db.insert(users).values(data).returning();
 };
 
-export const findUserByEmail = async (email: string) => {
-  return await db.select().from(users).where(eq(users.email, email)).limit(1);
+export const getUserById = async (id: number) => {
+  return await db.select().from(users).where(eq(users.id, id));
 };
 
-export const findUserById = async (id: number) => {
-  return await db.select().from(users).where(eq(users.id, id)).limit(1);
+export const getUserByMobile = async (mobileNumber: string) => {
+  return await db.select().from(users).where(eq(users.mobileNumber, mobileNumber));
 };
 
-export const deleteUserById = async (id: number) => {
-  return await db.delete(users).where(eq(users.id, id));
+export const getUserByEmail = async (email: string) => {
+  return await db.select().from(users).where(eq(users.email, email));
 };

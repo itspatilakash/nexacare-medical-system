@@ -1,16 +1,17 @@
-import { db } from "./db";
-import { hospitals } from "../../shared/schema";
-import { InsertHospital } from "../../shared/schema-types";
-import { eq } from "drizzle-orm";
+// server/storage/hospitals.ts
+import { db } from './db';
+import { hospitals } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
+import type { InsertHospital } from '../../shared/schema-types';
 
-export const createHospital = async (hospital: InsertHospital) => {
-  return await db.insert(hospitals).values(hospital).returning();
+export const createHospital = (hospital: InsertHospital) => {
+  return db.insert(hospitals).values(hospital).returning();
 };
 
-export const getHospitalById = async (id: string) => {
-  return await db.select().from(hospitals).where(eq(hospitals.id, id)).limit(1);
+export const getHospitalById = (id: number) => {
+  return db.select().from(hospitals).where(eq(hospitals.id, id)).limit(1);
 };
 
-export const getAllHospitals = async () => {
-  return await db.select().from(hospitals);
+export const getAllHospitals = () => {
+  return db.select().from(hospitals);
 };

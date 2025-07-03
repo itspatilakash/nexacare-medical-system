@@ -7,10 +7,10 @@ export const createPrescription = async (prescription: InsertPrescription) => {
   return await db.insert(prescriptions).values(prescription).returning();
 };
 
-export const getPrescriptionsForPatient = async (patientId: string) => {
+export const getPrescriptionsForPatient = async (patientId: number) => {
   return await db.select().from(prescriptions).where(eq(prescriptions.patientId, patientId));
 };
 
-export const getPrescriptionsForAppointment = async (appointmentId: string) => {
+export const getPrescriptionsForAppointment = async (appointmentId: number) => {
   return await db.select().from(prescriptions).where(eq(prescriptions.appointmentId, appointmentId));
 };

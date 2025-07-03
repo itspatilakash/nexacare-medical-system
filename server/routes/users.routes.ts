@@ -1,16 +1,34 @@
-import express from "express";
-import { getUserByPhone, getUserById } from "../storage/users";
+// server/routes/users.routes.ts
+import { Router } from 'express';
+import { registerUser, findUserById } from '../services/users.service';
+import { insertUserSchema } from '../../shared/schema';
+import { z } from 'zod';
 
-const router = express.Router();
+const router = Router();
 
-router.get("/phone/:phone", async (req, res) => {
-  const user = await getUserByPhone(req.params.phone);
-  res.json({ user });
+// Register User
+router.post('/', async (req, res) => {
+  try {
+    const data = insertUserSchema.parse(req.body);
+    const user = await registerUser(data);
+    res.status(201).json(user);
+  } catch (err) {
+    console.error('User registration error:', err);
+    res.status(400).json({ message: 'Invalid data', error: err });
+  }
 });
 
-router.get("/:id", async (req, res) => {
-  const user = await getUserById(req.params.id);
-  res.json({ user });
+// Get user by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const user = await findUserById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('User fetch error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 export default router;

@@ -1,20 +1,33 @@
-import { db } from "./db";
-import { appointments } from "../../shared/schema";
-import { InsertAppointment } from "../../shared/schema-types";
-import { eq } from "drizzle-orm";
+// server/storage/appointments.ts
+import { db } from './db';
+import { appointments } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
+import type { InsertAppointment } from '../../shared/schema-types';
 
-export const createAppointment = async (appt: InsertAppointment) => {
-  return await db.insert(appointments).values(appt).returning();
+/**
+ * Insert a new appointment record into the DB.
+ */
+export const createAppointment = (appt: Omit<InsertAppointment, 'id' | 'createdAt' | 'status'>) => {
+  return db.insert(appointments).values(appt).returning();
 };
 
-export const getAppointmentById = async (id: string) => {
-  return await db.select().from(appointments).where(eq(appointments.id, id)).limit(1);
+/**
+ * Get a single appointment by ID.
+ */
+export const getAppointmentById = (id: number) => {
+  return db.select().from(appointments).where(eq(appointments.id, id)).limit(1);
 };
 
-export const getAppointmentsForDoctor = async (doctorId: string) => {
-  return await db.select().from(appointments).where(eq(appointments.doctorId, doctorId));
+/**
+ * Get all appointments for a doctor.
+ */
+export const getAppointmentsForDoctor = (doctorId: number) => {
+  return db.select().from(appointments).where(eq(appointments.doctorId, doctorId));
 };
 
-export const getAppointmentsForPatient = async (patientId: string) => {
-  return await db.select().from(appointments).where(eq(appointments.patientId, patientId));
+/**
+ * Get all appointments for a patient.
+ */
+export const getAppointmentsForPatient = (patientId: number) => {
+  return db.select().from(appointments).where(eq(appointments.patientId, patientId));
 };

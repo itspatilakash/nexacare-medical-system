@@ -1,4 +1,16 @@
 import type { Request } from "express";
+import 'express';
+
+declare module 'express' {
+  export interface Request {
+    user?: {
+      id: number;
+      mobileNumber: string;
+      role: string;
+      fullName: string;
+    };
+  }
+}
 
 export interface AuthenticatedRequest extends Request {
   user?: {
