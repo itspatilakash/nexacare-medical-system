@@ -3,8 +3,8 @@ import { Router } from 'express';
 import { createHospital, getAllHospitals } from '../services/hospitals.service';
 import { insertHospitalSchema } from '../../shared/schema';
 import {approveLab,approveDoctor} from '../services/hospitals.service'
-import { authenticateToken, authorizeRoles } from '@/middleware/auth';
-import { AuthenticatedRequest } from '@/types';
+import { authenticateToken, authorizeRoles } from '../middleware/auth';
+import { AuthenticatedRequest } from '../types';
 
 
 const router = Router();

@@ -32,6 +32,5 @@ export async function registerRoutes(app: Express) {
   app.use("/api/appointments", appointmentsRoutes);
   app.use("/api/doctors/availability", availabilityRoutes);
   app.use("/api/prescriptions", prescriptionsRoutes); 
-  app.use("/api/users", usersRoutes);
   return app;
 }

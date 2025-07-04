@@ -291,7 +291,7 @@ export default function HospitalRegistration() {
                     <Checkbox
                       id={`dept-${department}`}
                       checked={selectedDepartments.includes(department)}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked: boolean) => 
                         handleDepartmentChange(department, checked as boolean)
                       }
                     />
@@ -317,7 +317,7 @@ export default function HospitalRegistration() {
                     <Checkbox
                       id={`service-${service}`}
                       checked={selectedServices.includes(service)}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked: boolean) => 
                         handleServiceChange(service, checked as boolean)
                       }
                     />
