@@ -1,7 +1,8 @@
+// server/vite.ts
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger, type InlineConfig } from "vite";
+import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import { fileURLToPath } from "url";
 
@@ -11,12 +12,10 @@ const __dirname = path.dirname(__filename);
 const viteLogger = createLogger();
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "..", "client", "dist");
+  const distPath = path.resolve(__dirname, "../dist/client");
 
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    throw new Error(`Could not find the built client: ${distPath}`);
   }
 
   app.use(express.static(distPath));
@@ -26,20 +25,9 @@ export function serveStatic(app: Express) {
   });
 }
 
-export function log(message: string, source = "express") {
-  const formattedTime = new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
-  console.log(`${formattedTime} [${source}] ${message}`);
-}
-
 export async function setupVite(app: Express, server: Server) {
   const clientRoot = path.resolve(__dirname, "../client");
-  
+
   const vite = await createViteServer({
     root: clientRoot,
     server: {
@@ -49,22 +37,20 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
     customLogger: {
       ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-      },
+      error: (msg, options) => viteLogger.error(msg, options),
     },
   });
 
   app.use(vite.middlewares);
-  
+
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
     try {
       const clientTemplate = path.resolve(clientRoot, "index.html");
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      const page = await vite.transformIndexHtml(url, template);
-      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+      const html = await vite.transformIndexHtml(url, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
