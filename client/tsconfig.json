@@ -1,19 +1,18 @@
-// client/tsconfig.json
 {
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "jsx": "react-jsx",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler", // ✅ required for Tailwind 4
     "strict": true,
     "baseUrl": ".",
     "paths": {
-       "@/*": ["src/*"]
+      "@/*": ["src/*"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src"],
+  "include": ["src", "tailwind.config.ts"],
   "exclude": ["dist"]
 }
