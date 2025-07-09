@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "TS_NODE_PROJECT=tsconfig.json NODE_ENV=development tsx server/index.ts",
+    "dev": "concurrently -k \"tsx server/index.ts\" \"vite --config client/vite.config.ts --port 5173\"",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
     "build:server": "tsc",
@@ -22,7 +22,9 @@
     "nanoid": "^5.1.5",
     "pg": "^8.11.1",
     "ws": "^8.18.3",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "concurrently": "^8.2.0",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
@@ -35,6 +37,7 @@
     "@types/node": "^20.5.1",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.6.0",
+    "concurrently": "^9.2.0",
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.2",

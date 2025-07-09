@@ -2,12 +2,8 @@
 export default {
   darkMode: ["class"],
   content: [
-    "./index.html", 
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./src/components/**/*.{js,jsx,ts,tsx}",
-    "./src/pages/**/*.{js,jsx,ts,tsx}",
-    "./src/hooks/**/*.{js,jsx,ts,tsx}",
-    "./src/lib/**/*.{js,jsx,ts,tsx}"
+    "./client/index.html",
+  "./client/src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
