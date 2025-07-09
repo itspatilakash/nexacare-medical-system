@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import DashboardLayout from "@/components/layout/dashboard-layout";
-import AppointmentBookingModal from "@/components/modals/appointment-booking-modal";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import DashboardLayout from "../../components/layout/dashboard-layout";
+import AppointmentBookingModal from "../../components/modals/appointment-booking-modal";
 import { User, Calendar, FileText, ClipboardList, MessageCircle } from "lucide-react";
 
 export default function PatientDashboard() {
@@ -11,14 +11,17 @@ export default function PatientDashboard() {
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
+    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
   });
 
   const { data: appointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ['/api/appointments/my'],
+    queryFn: () => fetch('/api/appointments/my').then(res => res.json()),
   });
 
   const { data: labReports, isLoading: labReportsLoading } = useQuery({
     queryKey: ['/api/lab-reports/my'],
+    queryFn: () => fetch('/api/lab-reports/my').then(res => res.json()),
   });
 
   const navigationItems = [

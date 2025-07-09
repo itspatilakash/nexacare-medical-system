@@ -33,6 +33,9 @@ export default defineConfig({
     outDir: '../dist/client', // match backend
     emptyOutDir: true,
   },
+  css: {
+    postcss: './postcss.config.js',
+  },
   server: {
     port: 5173,
     proxy: {

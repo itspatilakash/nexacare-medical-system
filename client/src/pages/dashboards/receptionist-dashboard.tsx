@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import DashboardLayout from "@/components/layout/dashboard-layout";
-import AppointmentBookingModal from "@/components/modals/appointment-booking-modal";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import DashboardLayout from "../../components/layout/dashboard-layout";
+import AppointmentBookingModal from "../../components/modals/appointment-booking-modal";
 import { Users, Calendar, UserPlus, Clock, Phone, Settings } from "lucide-react";
 
 export default function ReceptionistDashboard() {
@@ -12,10 +12,12 @@ export default function ReceptionistDashboard() {
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
+    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
   });
 
   const { data: appointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ['/api/appointments/my'],
+    queryFn: () => fetch('/api/appointments/my').then(res => res.json()),
   });
 
   const navigationItems = [
