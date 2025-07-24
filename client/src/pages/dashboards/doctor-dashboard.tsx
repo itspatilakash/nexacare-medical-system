@@ -1,16 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import DashboardLayout from "../../components/layout/dashboard-layout";
 import { UserRound, Calendar, User, FileText, ClipboardList } from "lucide-react";
 
 export default function DoctorDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/dashboard/stats'],
-  });
+  queryKey: ['/api/dashboard/stats'],
+  queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
+});
 
   const { data: todayAppointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ['/api/appointments/today'],
+    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
+
   });
 
   const navigationItems = [
@@ -43,7 +46,10 @@ export default function DoctorDashboard() {
   ];
 
   const headerActions = (
-    <Button className="medical-blue text-white hover:bg-blue-700">
+    <Button 
+      className="medical-blue text-white hover:bg-blue-700"
+      onClick={() => window.location.href = '/dashboard/doctor/prescriptions'}
+    >
       New Prescription
     </Button>
   );

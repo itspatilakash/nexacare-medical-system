@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import { db } from "../server/db";
-import { storage } from "../server/storage";
+import { users, hospitals, doctors, patients, receptionists, labs, appointments, prescriptions, labReports, notifications, otpVerifications } from "../shared/schema";
 
 // Dummy data generators
 const hospitalNames = [

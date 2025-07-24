@@ -45,25 +45,140 @@ export const getPrescriptionsByFilters = async ({
 
 // 4. Update prescription (doctor-only)
 export const updatePrescription = async (
-  prescriptionId: number,
   doctorId: number,
-  updates: Partial<Pick<InsertPrescription, "diagnosis" | "medications" | "instructions">>
+  prescriptionId: number,
+  updates: Partial<Pick<InsertPrescription, "diagnosis" | "medications" | "instructions" | "followUpDate">>
 ) => {
   return await db
     .update(prescriptions)
-    .set({ ...updates, createdAt: new Date() }) // use updatedAt if present
+    .set({ ...updates, updatedAt: new Date() })
     .where(and(eq(prescriptions.id, prescriptionId), eq(prescriptions.doctorId, doctorId)))
     .returning();
 };
 
 // 5. Delete prescription (doctor-only)
 export const deletePrescription = async (
-  prescriptionId: number,
-  doctorId: number
+  doctorId: number,
+  prescriptionId: number
 ) => {
   return await db
     .delete(prescriptions)
     .where(and(eq(prescriptions.id, prescriptionId), eq(prescriptions.doctorId, doctorId)))
     .returning();
+};
+
+// 6. Get prescriptions for doctor with filters
+export const getPrescriptionsForDoctor = async ({
+  doctorId,
+  search,
+  hospitalId,
+  from,
+  to,
+  status,
+  limit,
+}: {
+  doctorId: number;
+  search?: string;
+  hospitalId?: number;
+  from?: Date;
+  to?: Date;
+  status?: string;
+  limit?: number;
+}) => {
+  let conditions = [eq(prescriptions.doctorId, doctorId)];
+
+  if (hospitalId) {
+    conditions.push(eq(prescriptions.hospitalId, hospitalId));
+  }
+  if (from && to) {
+    conditions.push(gte(prescriptions.createdAt, from));
+    conditions.push(lte(prescriptions.createdAt, to));
+  }
+  if (status && status !== 'all') {
+    if (status === 'active') {
+      conditions.push(eq(prescriptions.isActive, true));
+    } else if (status === 'inactive') {
+      conditions.push(eq(prescriptions.isActive, false));
+    }
+  }
+
+  const query = db.select().from(prescriptions).where(and(...conditions));
+  
+  if (limit) {
+    return await query.limit(limit);
+  }
+
+  return await query;
+};
+
+// 7. Get prescriptions for hospital admin
+export const getPrescriptionsForHospital = async ({
+  hospitalId,
+  search,
+  doctorId,
+  from,
+  to,
+  status,
+  limit,
+}: {
+  hospitalId: number;
+  search?: string;
+  doctorId?: number;
+  from?: Date;
+  to?: Date;
+  status?: string;
+  limit?: number;
+}) => {
+  let conditions = [eq(prescriptions.hospitalId, hospitalId)];
+
+  if (doctorId) {
+    conditions.push(eq(prescriptions.doctorId, doctorId));
+  }
+  if (from && to) {
+    conditions.push(gte(prescriptions.createdAt, from));
+    conditions.push(lte(prescriptions.createdAt, to));
+  }
+  if (status && status !== 'all') {
+    if (status === 'active') {
+      conditions.push(eq(prescriptions.isActive, true));
+    } else if (status === 'inactive') {
+      conditions.push(eq(prescriptions.isActive, false));
+    }
+  }
+
+  const query = db.select().from(prescriptions).where(and(...conditions));
+  
+  if (limit) {
+    return await query.limit(limit);
+  }
+
+  return await query;
+};
+
+// 8. Get prescription by ID with authorization
+export const getPrescriptionById = async (
+  prescriptionId: number,
+  userId: number,
+  userRole: string
+) => {
+  const prescription = await db
+    .select()
+    .from(prescriptions)
+    .where(eq(prescriptions.id, prescriptionId));
+
+  if (prescription.length === 0) return null;
+
+  const prescriptionData = prescription[0];
+
+  // Authorization logic
+  if (userRole === 'DOCTOR' && prescriptionData.doctorId !== userId) {
+    return null; // Doctor can only see their own prescriptions
+  }
+  if (userRole === 'PATIENT' && prescriptionData.patientId !== userId) {
+    return null; // Patient can only see their own prescriptions
+  }
+  // Hospital admin can see all prescriptions in their hospital (handled by hospitalId)
+
+  return prescriptionData;
 };
 

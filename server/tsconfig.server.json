@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/server",
+    "rootDir": ".",
+    "noEmit": false
+  },
+  "include": [
+    "server/**/*",
+    "shared/**/*",
+    "drizzle/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "client"
+  ]
+}

@@ -1,0 +1,11 @@
+packages:
+  - client
+  - server
+  - shared
+
+ignoredBuiltDependencies:
+  - bcrypt
+  - esbuild
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'

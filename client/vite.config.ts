@@ -1,26 +1,25 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// ⬇️ ES module-compatible __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src") // Adjusted __dirname usage
-    }
+  build: {
+    outDir: '../dist/client', // Build to dist/client in root
+    emptyOutDir: true,
+  },
+  css: {
+    postcss: './postcss.config.mjs',
   },
   server: {
-    port: 3000,
+    port: 5173,
     proxy: {
-      "/api": {
-        target: "http://localhost:5000",
-        changeOrigin: true
-      }
-    }
-  }
+      '/api': 'http://localhost:3000',
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 });
