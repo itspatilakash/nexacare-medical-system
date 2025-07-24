@@ -1,6 +1,9 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getAuthToken } from "./auth";
 
+// API base URL - adjust this to match your server port
+const API_BASE_URL = 'http://localhost:5173';
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -24,7 +27,10 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(url, {
+  // Ensure URL starts with http or is relative
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+
+  const res = await fetch(fullUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -48,7 +54,11 @@ export const getQueryFn: <T>(options: {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const res = await fetch(queryKey[0] as string, {
+    // Ensure URL starts with http or is relative
+    const url = queryKey[0] as string;
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+
+    const res = await fetch(fullUrl, {
       headers,
       credentials: "include",
     });

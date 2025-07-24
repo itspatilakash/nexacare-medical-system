@@ -106,4 +106,73 @@ router.delete(
   }
 );
 
+// 6. Get prescriptions for logged-in doctor
+router.get(
+  "/doctor",
+  authenticateToken,
+  authorizeRoles("DOCTOR"),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { search, hospitalId, from, to, status, limit } = req.query;
+      const prescriptions = await prescriptionService.getPrescriptionsForDoctor({
+        doctorId: req.user!.id,
+        search: search as string,
+        hospitalId: hospitalId ? Number(hospitalId) : undefined,
+        from: from ? new Date(from as string) : undefined,
+        to: to ? new Date(to as string) : undefined,
+        status: status as string,
+        limit: limit ? Number(limit) : undefined,
+      });
+      res.json(prescriptions);
+    } catch (err) {
+      console.error("Fetch doctor prescriptions failed:", err);
+      res.status(500).json({ error: "Failed to fetch prescriptions" });
+    }
+  }
+);
+
+// 7. Get prescriptions for hospital admin
+router.get(
+  "/hospital",
+  authenticateToken,
+  authorizeRoles("HOSPITAL"),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { search, doctorId, from, to, status, limit } = req.query;
+      const prescriptions = await prescriptionService.getPrescriptionsForHospital({
+        hospitalId: req.user!.id,
+        search: search as string,
+        doctorId: doctorId ? Number(doctorId) : undefined,
+        from: from ? new Date(from as string) : undefined,
+        to: to ? new Date(to as string) : undefined,
+        status: status as string,
+        limit: limit ? Number(limit) : undefined,
+      });
+      res.json(prescriptions);
+    } catch (err) {
+      console.error("Fetch hospital prescriptions failed:", err);
+      res.status(500).json({ error: "Failed to fetch prescriptions" });
+    }
+  }
+);
+
+// 8. Get prescription by ID (for viewing details)
+router.get(
+  "/:id",
+  authenticateToken,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const prescriptionId = Number(req.params.id);
+      const prescription = await prescriptionService.getPrescriptionById(prescriptionId, req.user!.id, req.user!.role);
+      if (!prescription) {
+        return res.status(404).json({ message: "Prescription not found or unauthorized" });
+      }
+      res.json(prescription);
+    } catch (err) {
+      console.error("Fetch prescription error:", err);
+      res.status(500).json({ error: "Failed to fetch prescription" });
+    }
+  }
+);
+
 export default router;

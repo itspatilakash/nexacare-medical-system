@@ -46,7 +46,10 @@ export default function DoctorDashboard() {
   ];
 
   const headerActions = (
-    <Button className="medical-blue text-white hover:bg-blue-700">
+    <Button 
+      className="medical-blue text-white hover:bg-blue-700"
+      onClick={() => window.location.href = '/dashboard/doctor/prescriptions'}
+    >
       New Prescription
     </Button>
   );

@@ -6,6 +6,8 @@ import {
   verifyOtp,
   registerUser,
   loginUser,
+  sendLoginOtp,
+  loginUserWithOtp,
 } from '../services/auth.service';
 import {
   registrationSchema,
@@ -45,6 +47,28 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     console.error('Registration error:', error);
     res.status(400).json({ message: 'Registration failed' });
+  }
+});
+
+router.post('/login/otp/send', async (req, res) => {
+  try {
+    const { mobileNumber } = req.body;
+    const result = await sendLoginOtp(mobileNumber);
+    res.json(result);
+  } catch (error) {
+    console.error('Send login OTP error:', error);
+    res.status(400).json({ message: 'Failed to send login OTP' });
+  }
+});
+
+router.post('/login/otp/verify', async (req, res) => {
+  try {
+    const { mobileNumber, otp } = req.body;
+    const result = await loginUserWithOtp({ mobileNumber, otp });
+    res.json(result);
+  } catch (error) {
+    console.error('Login OTP verification error:', error);
+    res.status(400).json({ message: 'Login OTP verification failed' });
   }
 });
 

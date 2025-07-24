@@ -144,6 +144,7 @@ export default function PatientDashboard() {
             <Button 
               variant="outline" 
               className="h-20 flex flex-col items-center justify-center space-y-2 border-2 border-dashed border-gray-200 hover:border-medical-green hover:bg-green-50"
+              onClick={() => window.location.href = '/dashboard/patient/prescriptions'}
             >
               <FileText className="w-8 h-8 text-medical-green" />
               <span className="text-sm font-medium text-gray-900">View Prescriptions</span>

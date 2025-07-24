@@ -3,16 +3,18 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k \"tsx server/index.ts\" \"vite --config client/vite.config.ts --port 5173\"",
+    "dev": "concurrently -k \"tsx server/index.ts\" \"cd client && npm run dev\"",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
-    "build:server": "tsc",
-    "start": "node dist/index.js"
+    "build:server": "tsc --project tsconfig.server.json",
+    "start": "node dist/server/index.js",
+    "preview": "npm run build && cross-env NODE_ENV=production node dist/server/index.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
+    "concurrently": "^8.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "drizzle-zod": "^0.8.2",
@@ -21,10 +23,9 @@
     "morgan": "^1.10.0",
     "nanoid": "^5.1.5",
     "pg": "^8.11.1",
+    "tsx": "^4.7.0",
     "ws": "^8.18.3",
-    "zod": "^3.25.67",
-    "concurrently": "^8.2.0",
-    "tsx": "^4.7.0"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",

@@ -12,9 +12,28 @@ import DoctorDashboard from "./pages/dashboards/doctor-dashboard";
 import PatientDashboard from "./pages/dashboards/patient-dashboard";
 import LabDashboard from "./pages/dashboards/lab-dashboard";
 import ReceptionistDashboard from "./pages/dashboards/receptionist-dashboard";
+import DoctorPrescriptionsPage from "./pages/dashboards/doctor-prescriptions";
+import PatientPrescriptionsPage from "./pages/dashboards/patient-prescriptions";
+import HospitalPrescriptionsPage from "./pages/dashboards/hospital-prescriptions";
 import NotFound from "./pages/not-found";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+
+// Simple test component to verify routing works
+function TestPage() {
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">NexaCare Medical System</h1>
+        <p className="text-gray-600 mb-4">The application is running successfully!</p>
+        <div className="space-y-2">
+          <a href="/login" className="block text-blue-600 hover:underline">Go to Login</a>
+          <a href="/register" className="block text-blue-600 hover:underline">Go to Register</a>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -84,6 +103,9 @@ function Router() {
 
   return (
     <Switch>
+      {/* Test route */}
+      <Route path="/test" component={TestPage} />
+
       {/* Auth routes */}
       <Route path="/login">
         {isAuthenticated ? <Redirect to="/dashboard" /> : <Login />}
@@ -113,9 +135,27 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/dashboard/doctor/prescriptions">
+        <ProtectedRoute allowedRoles={['doctor']}>
+          <DoctorPrescriptionsPage />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/dashboard/patient">
         <ProtectedRoute allowedRoles={['patient']}>
           <PatientDashboard />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/patient/prescriptions">
+        <ProtectedRoute allowedRoles={['patient']}>
+          <PatientPrescriptionsPage />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/hospital/prescriptions">
+        <ProtectedRoute allowedRoles={['hospital']}>
+          <HospitalPrescriptionsPage />
         </ProtectedRoute>
       </Route>
       
@@ -133,7 +173,7 @@ function Router() {
 
       {/* Root route */}
       <Route path="/">
-        {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
+        {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/test" />}
       </Route>
 
       {/* 404 */}

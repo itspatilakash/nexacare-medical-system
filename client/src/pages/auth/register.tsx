@@ -24,8 +24,9 @@ export default function Register() {
     onSuccess: (data) => {
       toast({
         title: "OTP sent successfully",
-        description: `Verification code sent to ${data.mobileNumber}`,
+        description: `OTP: ${data.otp} (Check console for development)`,
       });
+      console.log('Registration OTP:', data.otp);
       // Pass registration data to OTP verification page
       setLocation(`/verify-otp?mobile=${encodeURIComponent(data.mobileNumber)}&role=${data.role}&name=${encodeURIComponent(formData.fullName)}`);
     },
@@ -63,7 +64,7 @@ export default function Register() {
             <div className="medical-blue rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <Stethoscope className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">MedCare System</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">NexaCare</h1>
             <p className="text-medical-gray">Secure Medical Management Platform</p>
           </div>
 
@@ -91,7 +92,7 @@ export default function Register() {
                 </Label>
                 <Input
                   type="tel"
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="9876543210"
                   value={formData.mobileNumber}
                   onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-blue focus:border-transparent"

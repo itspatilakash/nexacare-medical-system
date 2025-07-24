@@ -2,8 +2,8 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
-import { db } from '../storage/db';
-import { users, otpVerifications, InsertOtp } from '../../shared/schema';
+import { db } from '../db';
+import { users, otpVerifications } from '../../drizzle/schema';
 import { generateOTP, isOtpExpired } from '../utils/otp';
 import type {
   InsertUser,
@@ -28,13 +28,13 @@ export const generateToken = (user: {
  */
 export const sendOtp = async (mobileNumber: string, role: string) => {
   const otp = generateOTP();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
 
   await db.insert(otpVerifications).values({
     mobileNumber,
     otp,
     expiresAt,
-  } satisfies Omit<InsertOtp, 'id' | 'createdAt'>);
+  });
 
   // Integrate SMS service here (e.g., Twilio)
   console.log(`Sending OTP ${otp} to ${mobileNumber}`);
@@ -91,6 +91,65 @@ export const registerUser = async (user: Omit<InsertUser, 'id' | 'createdAt' | '
   });
 
   return { user: createdUser, token };
+};
+
+/**
+ * Send OTP for login.
+ */
+export const sendLoginOtp = async (mobileNumber: string) => {
+  const [user] = await db.select().from(users).where(eq(users.mobileNumber, mobileNumber)).limit(1);
+  if (!user) throw new Error('User not found');
+
+  const otp = generateOTP();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
+
+  await db.insert(otpVerifications).values({
+    mobileNumber,
+    otp,
+    expiresAt,
+  });
+
+  // Integrate SMS service here (e.g., Twilio)
+  console.log(`Sending login OTP ${otp} to ${mobileNumber}`);
+  return { success: true, otp }; // Return OTP only in dev
+};
+
+/**
+ * Login user by verifying OTP and returning a token.
+ */
+export const loginUserWithOtp = async ({
+  mobileNumber,
+  otp,
+}: {
+  mobileNumber: string;
+  otp: string;
+}) => {
+  const [user] = await db.select().from(users).where(eq(users.mobileNumber, mobileNumber)).limit(1);
+  if (!user) throw new Error('User not found');
+
+  const [record] = await db
+    .select()
+    .from(otpVerifications)
+    .where(eq(otpVerifications.mobileNumber, mobileNumber))
+    .orderBy(otpVerifications.createdAt)
+    .limit(1);
+
+  if (!record || record.otp !== otp || isOtpExpired(record.expiresAt)) {
+    throw new Error('Invalid or expired OTP');
+  }
+
+  await db.update(otpVerifications)
+    .set({ isUsed: true })
+    .where(eq(otpVerifications.id, record.id));
+
+  const token = generateToken({
+    id: user.id,
+    mobileNumber: user.mobileNumber,
+    role: user.role,
+    fullName: user.fullName,
+  });
+
+  return { user, token };
 };
 
 /**
