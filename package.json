@@ -1,0 +1,51 @@
+{
+  "name": "nexacare-medical-system",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"tsx server/index.ts\" \"cd client && npm run dev\"",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "tsc --project tsconfig.server.json",
+    "start": "node dist/server/index.js",
+    "preview": "npm run build && cross-env NODE_ENV=production node dist/server/index.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "concurrently": "^8.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "drizzle-zod": "^0.8.2",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nanoid": "^5.1.5",
+    "pg": "^8.11.1",
+    "tsx": "^4.7.0",
+    "ws": "^8.18.3",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^20.5.1",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^4.6.0",
+    "concurrently": "^9.2.0",
+    "cross-env": "^7.0.3",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.2",
+    "tailwindcss-animate": "^1.0.7",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.5",
+    "vite": "^6.3.5"
+  }
+}

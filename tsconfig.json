@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "strict": true,
+    "baseUrl": ".",
+   "paths": {
+     "@/*": ["server/*"],
+     "@shared/*": ["shared/*"]
+   },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist"
+  },
+  "include": ["server", "client", "types"],
+  "exclude": ["node_modules", "dist"]
+}
