@@ -1,24 +1,42 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { useToast } from "../../hooks/use-toast";
+import { 
+  Card, 
+  Form, 
+  Input, 
+  Button, 
+  App, 
+  Space, 
+  Typography, 
+  Divider,
+  Row,
+  Col,
+  Steps,
+  Alert
+} from 'antd';
+import { 
+  SafetyOutlined, 
+  LockOutlined, 
+  MedicineBoxOutlined,
+  ArrowLeftOutlined,
+  CheckCircleOutlined
+} from '@ant-design/icons';
 import { setAuthToken } from "../../lib/auth";
-import { Stethoscope, ArrowLeft, Shield, Lock } from "lucide-react";
+
+const { Title, Text } = Typography;
+const { Step } = Steps;
 
 export default function OtpVerification() {
-  const [otp, setOtp] = useState("");
-  const [password, setPassword] = useState("");
+  const { message } = App.useApp();
+  const [form] = Form.useForm();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const [registrationData, setRegistrationData] = useState({
     mobileNumber: "",
     role: "",
     fullName: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
 
   useEffect(() => {
     // Get registration data from URL params
@@ -39,24 +57,7 @@ export default function OtpVerification() {
     });
   }, [setLocation]);
 
-  const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter the complete 6-digit OTP",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (password.length < 6) {
-      toast({
-        title: "Invalid password",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleVerifyOtp = async (values: any) => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/auth/otp/verify', {
@@ -64,177 +65,243 @@ export default function OtpVerification() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mobileNumber: registrationData.mobileNumber,
-          otp,
+          otp: values.otp,
         }),
       });
 
-      if (!response.ok) throw new Error('Invalid OTP');
+      const data = await response.json();
+      
+      if (response.ok) {
+        message.success('OTP verified successfully!');
+        setCurrentStep(1);
+      } else {
+        message.error(data.message || 'OTP verification failed');
+      }
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      message.error('OTP verification failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Now register the user with the verified OTP
-      const registerResponse = await fetch('/api/auth/register', {
+  const handleCompleteRegistration = async (values: any) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...registrationData,
-          password,
+          password: values.password,
+          confirmPassword: values.confirmPassword,
         }),
       });
-
-      if (!registerResponse.ok) throw new Error('Registration failed');
-
-      const data = await registerResponse.json();
-      setAuthToken(data.token);
-      toast({
-        title: "Registration successful",
-        description: `Welcome to NexaCare, ${data.user.fullName}!`,
-      });
-      setLocation("/dashboard");
-      window.location.reload();
-    } catch (error: any) {
-      toast({
-        title: "Verification failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mobileNumber: registrationData.mobileNumber,
-          role: registrationData.role,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to resend OTP');
 
       const data = await response.json();
-      toast({
-        title: "OTP sent successfully",
-        description: `OTP: ${data.otp} (Check console for development)`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Failed to resend OTP",
-        description: error.message,
-        variant: "destructive",
-      });
+      
+      if (response.ok) {
+        setAuthToken(data.token);
+        message.success('Registration completed successfully!');
+        setCurrentStep(2);
+        
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          setLocation('/dashboard');
+        }, 2000);
+      } else {
+        message.error(data.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      message.error('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4 py-8">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-4 shadow-lg">
-            <Stethoscope className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-blue-600 mb-2">
-            NexaCare
-          </h1>
-          <p className="text-gray-600 text-sm">Complete Your Registration</p>
-        </div>
+  const steps = [
+    {
+      title: 'Verify OTP',
+      description: 'Enter the code sent to your mobile',
+      icon: <SafetyOutlined />,
+    },
+    {
+      title: 'Set Password',
+      description: 'Create your account password',
+      icon: <LockOutlined />,
+    },
+    {
+      title: 'Complete',
+      description: 'Account created successfully',
+      icon: <CheckCircleOutlined />,
+    },
+  ];
 
-        {/* OTP Verification Form */}
-        <Card className="border-0 shadow-xl bg-white">
-          <CardContent className="p-6">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Verify OTP</h2>
-              <p className="text-gray-600 text-sm">
-                Enter the 6-digit code sent to {registrationData.mobileNumber}
-              </p>
+  return (
+    <div className="medical-container">
+      <Row justify="center" align="middle" style={{ minHeight: '100vh' }}>
+        <Col xs={22} sm={18} md={12} lg={10} xl={8}>
+          <Card className="medical-card" style={{ borderRadius: '12px' }}>
+            <div className="medical-header" style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <MedicineBoxOutlined style={{ fontSize: '32px', marginBottom: '16px' }} />
+              <Title level={2} style={{ color: 'white', margin: 0 }}>
+                Complete Registration
+              </Title>
+              <Text style={{ color: 'rgba(255,255,255,0.8)' }}>
+                Verify your mobile number
+              </Text>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-4">
-              {/* OTP Input */}
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  OTP Code
-                </Label>
+            <div className="medical-form">
+              <Steps current={currentStep} items={steps} style={{ marginBottom: '32px' }} />
+
+              {currentStep === 0 && (
+                <Form
+                  form={form}
+                  name="verify-otp"
+                  onFinish={handleVerifyOtp}
+                  layout="vertical"
+                  size="large"
+                >
+                  <Alert
+                    message="OTP Sent"
+                    description={`We've sent a 6-digit OTP to ${registrationData.mobileNumber}`}
+                    type="info"
+                    showIcon
+                    style={{ marginBottom: '24px' }}
+                  />
+
+                  <Form.Item
+                    name="otp"
+                    label="Enter OTP"
+                    rules={[
+                      { required: true, message: 'Please enter the OTP' },
+                      { pattern: /^[0-9]{6}$/, message: 'Please enter a valid 6-digit OTP' }
+                    ]}
+                  >
                 <Input
-                  type="text"
-                  placeholder="123456"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="h-10 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-center text-lg tracking-widest"
-                  required
+                      prefix={<SafetyOutlined />}
+                      placeholder="Enter 6-digit OTP"
+                      className="medical-input"
                   maxLength={6}
                 />
-              </div>
+                  </Form.Item>
 
-              {/* Password Input */}
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <Lock className="w-4 h-4" />
-                  Create Password
-                </Label>
-                <Input
-                  type="password"
-                  placeholder="Enter a secure password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-10 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
-                  required
-                  minLength={6}
-                />
-              </div>
-
-              {/* Submit Button */}
+                  <Form.Item>
               <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-all duration-200"
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Verifying...
-                  </div>
-                ) : (
-                  "Verify & Complete Registration"
-                )}
-              </Button>
+                      type="primary"
+                      htmlType="submit"
+                      loading={isLoading}
+                      className="medical-button-primary"
+                      block
+                      size="large"
+                    >
+                      Verify OTP
+                    </Button>
+                  </Form.Item>
+                </Form>
+              )}
 
-              {/* Resend OTP Button */}
-              <div className="text-center">
-                <Button 
-                  type="button"
-                  variant="link" 
-                  onClick={handleResendOtp}
-                  disabled={isLoading}
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              {currentStep === 1 && (
+                <Form
+                  form={form}
+                  name="set-password"
+                  onFinish={handleCompleteRegistration}
+                  layout="vertical"
+                  size="large"
                 >
-                  Resend OTP
+                  <Alert
+                    message="OTP Verified"
+                    description="Now create your account password"
+                    type="success"
+                    showIcon
+                    style={{ marginBottom: '24px' }}
+                  />
+
+                  <Form.Item
+                    name="password"
+                    label="Password"
+                    rules={[
+                      { required: true, message: 'Please enter your password' },
+                      { min: 6, message: 'Password must be at least 6 characters' }
+                    ]}
+                  >
+                    <Input.Password
+                      prefix={<LockOutlined />}
+                      placeholder="Enter your password"
+                      className="medical-input"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    dependencies={['password']}
+                    rules={[
+                      { required: true, message: 'Please confirm your password' },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue('password') === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(new Error('Passwords do not match'));
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password
+                      prefix={<LockOutlined />}
+                      placeholder="Confirm your password"
+                      className="medical-input"
+                    />
+                  </Form.Item>
+
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={isLoading}
+                      className="medical-button-primary"
+                      block
+                      size="large"
+                    >
+                      Complete Registration
                 </Button>
-              </div>
+                  </Form.Item>
+                </Form>
+              )}
 
-              {/* Back Button */}
-              <div className="text-center pt-2">
+              {currentStep === 2 && (
+                <div style={{ textAlign: 'center' }}>
+                  <CheckCircleOutlined style={{ fontSize: '64px', color: '#52c41a', marginBottom: '24px' }} />
+                  <Title level={3} style={{ color: '#52c41a' }}>
+                    Registration Complete!
+                  </Title>
+                  <Text type="secondary" style={{ marginBottom: '24px', display: 'block' }}>
+                    Welcome to NexaCare Medical System, {registrationData.fullName}!
+                  </Text>
+                  <Text type="secondary" style={{ display: 'block' }}>
+                    Redirecting to your dashboard...
+                  </Text>
+              </div>
+              )}
+
+              <Divider />
+
+              <div style={{ textAlign: 'center' }}>
                 <Button 
-                  type="button"
-                  variant="link" 
+                  type="link"
+                  icon={<ArrowLeftOutlined />}
                   onClick={() => setLocation('/register')}
-                  className="text-gray-600 hover:text-gray-700 font-medium text-sm flex items-center gap-1"
                 >
-                  <ArrowLeft className="w-4 h-4" />
                   Back to Registration
                 </Button>
               </div>
-            </form>
-          </CardContent>
+            </div>
         </Card>
-      </div>
+        </Col>
+      </Row>
     </div>
   );
 }

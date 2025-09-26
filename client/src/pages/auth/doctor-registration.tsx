@@ -1,304 +1,288 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { useToast } from "../../hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { 
+  Card, 
+  Form, 
+  Input, 
+  Button, 
+  Select, 
+  DatePicker, 
+  Space, 
+  Typography, 
+  Row, 
+  Col,
+  App,
+  Divider,
+  Checkbox
+} from 'antd';
+import { 
+  UserOutlined, 
+  ArrowLeftOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  CalendarOutlined,
+  MedicineBoxOutlined,
+  GraduationCapOutlined
+} from '@ant-design/icons';
 import { apiRequest } from "../../lib/queryClient";
-import { UserRound, ArrowLeft } from "lucide-react";
 
-const doctorRegistrationSchema = z.object({
-  hospitalId: z.string().transform(Number).pipe(z.number().min(1, "Please select a hospital")),
-  specialty: z.string().min(2, "Specialty is required"),
-  licenseNumber: z.string().min(5, "License number is required"),
-  qualification: z.string().min(5, "Qualification is required"),
-  experience: z.string().transform(Number).pipe(z.number().min(0).max(50)),
-  consultationFee: z.string().transform(Number).pipe(z.number().min(100)),
-  languages: z.array(z.string()).min(1, "Select at least one language"),
-  bio: z.string().min(50, "Please provide a detailed bio (minimum 50 characters)"),
-  awards: z.string().optional(),
-});
-
-type DoctorRegistrationForm = z.infer<typeof doctorRegistrationSchema>;
-
-const specialties = [
-  "Cardiology", "Neurology", "Orthopedics", "Pediatrics", 
-  "Dermatology", "Oncology", "Psychiatry", "ENT",
-  "Gynecology", "Urology", "Ophthalmology", "Anesthesiology",
-  "Radiology", "Pathology", "Emergency Medicine", "Family Medicine"
-];
-
-const languages = [
-  "English", "Hindi", "Tamil", "Telugu", "Kannada", "Marathi", 
-  "Bengali", "Gujarati", "Punjabi", "Malayalam", "Oriya", "Assamese"
-];
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
 export default function DoctorRegistration() {
+  const { message } = App.useApp();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-
-  const { data: hospitals, isLoading: hospitalsLoading } = useQuery({
-    queryKey: ['/api/hospitals/list'],
-  });
-
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<DoctorRegistrationForm>({
-    resolver: zodResolver(doctorRegistrationSchema),
-    defaultValues: {
-      languages: [],
-      experience: "0",
-      consultationFee: "500",
-    }
-  });
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const registrationMutation = useMutation({
-    mutationFn: async (data: DoctorRegistrationForm) => {
-      const response = await apiRequest('/api/doctors/register', {
+    mutationFn: async (data: any) => {
+      return apiRequest('/auth/register/doctor', {
         method: 'POST',
         body: JSON.stringify(data),
       });
-      return response;
     },
     onSuccess: () => {
-      toast({
-        title: "Registration Successful",
-        description: "Doctor profile created successfully! You can now login.",
-      });
-      setLocation("/login");
+      message.success('Registration successful! Please check your phone for OTP verification.');
+      setLocation('/auth/otp-verification');
     },
     onError: (error: any) => {
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Failed to create doctor profile",
-        variant: "destructive",
-      });
+      message.error(error.message || 'Registration failed. Please try again.');
     },
   });
 
-  const onSubmit = (data: DoctorRegistrationForm) => {
-    const formData = {
-      ...data,
-      languages: selectedLanguages,
-      awards: data.awards ? data.awards.split(',').map(a => a.trim()) : [],
-    };
-    registrationMutation.mutate(formData);
-  };
-
-  const handleLanguageChange = (language: string, checked: boolean) => {
-    const updated = checked 
-      ? [...selectedLanguages, language]
-      : selectedLanguages.filter(l => l !== language);
-    setSelectedLanguages(updated);
-    setValue('languages', updated);
+  const handleSubmit = async (values: any) => {
+    setLoading(true);
+    try {
+      await registrationMutation.mutateAsync({
+        ...values,
+        dateOfBirth: values.dateOfBirth?.format('YYYY-MM-DD'),
+        role: 'doctor'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl">
-        <CardContent className="p-8">
-          <div className="flex items-center mb-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation("/register")}
-              className="mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <UserRound className="w-8 h-8 text-medical-blue mr-3" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Doctor Registration</h1>
-              <p className="text-medical-gray">Complete your professional profile</p>
-            </div>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <Card 
+        style={{ 
+          width: '100%', 
+          maxWidth: '600px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          borderRadius: '12px'
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <MedicineBoxOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
+          <Title level={2} style={{ margin: '0 0 8px 0', color: '#1890ff' }}>
+            Doctor Registration
+          </Title>
+          <Text type="secondary">
+            Join our medical team and provide healthcare services
+          </Text>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Hospital Selection */}
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                Hospital Affiliation *
-              </Label>
-              <Select onValueChange={(value) => setValue('hospitalId', value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a hospital" />
-                </SelectTrigger>
-                <SelectContent>
-                  {hospitalsLoading ? (
-                    <SelectItem value="loading" disabled>Loading hospitals...</SelectItem>
-                  ) : (
-                    hospitals?.map((hospital: any) => (
-                      <SelectItem key={hospital.id} value={hospital.id.toString()}>
-                        {hospital.name} - {hospital.city}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              {errors.hospitalId && (
-                <p className="text-red-500 text-sm mt-1">{errors.hospitalId.message}</p>
-              )}
-            </div>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          size="large"
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="firstName"
+                label="First Name"
+                rules={[{ required: true, message: 'Please enter your first name' }]}
+              >
+                <Input placeholder="Enter first name" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="lastName"
+                label="Last Name"
+                rules={[{ required: true, message: 'Please enter your last name' }]}
+              >
+                <Input placeholder="Enter last name" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-            {/* Professional Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Specialty *
-                </Label>
-                <Select onValueChange={(value) => setValue('specialty', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select your specialty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {specialties.map((specialty) => (
-                      <SelectItem key={specialty} value={specialty}>
-                        {specialty}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+          <Form.Item
+            name="phone"
+            label="Phone Number"
+            rules={[
+              { required: true, message: 'Please enter your phone number' },
+              { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
+            ]}
+          >
+                <Input
+              prefix={<PhoneOutlined />}
+              placeholder="Enter 10-digit phone number" 
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email Address"
+            rules={[
+              { required: true, message: 'Please enter your email' },
+              { type: 'email', message: 'Please enter a valid email' }
+            ]}
+          >
+                <Input
+              prefix={<MailOutlined />}
+              placeholder="Enter email address" 
+            />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="dateOfBirth"
+                label="Date of Birth"
+                rules={[{ required: true, message: 'Please select your date of birth' }]}
+              >
+                <DatePicker 
+                  style={{ width: '100%' }}
+                  placeholder="Select date of birth"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="gender"
+                label="Gender"
+                rules={[{ required: true, message: 'Please select gender' }]}
+              >
+                <Select placeholder="Select gender">
+                  <Option value="male">Male</Option>
+                  <Option value="female">Female</Option>
+                  <Option value="other">Other</Option>
                 </Select>
-                {errors.specialty && (
-                  <p className="text-red-500 text-sm mt-1">{errors.specialty.message}</p>
-                )}
-              </div>
+              </Form.Item>
+            </Col>
+          </Row>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Medical License Number *
-                </Label>
-                <Input
-                  {...register("licenseNumber")}
-                  placeholder="DOC123456"
-                  className="w-full"
-                />
-                {errors.licenseNumber && (
-                  <p className="text-red-500 text-sm mt-1">{errors.licenseNumber.message}</p>
-                )}
-              </div>
+          <Form.Item
+            name="specialization"
+            label="Medical Specialization"
+            rules={[{ required: true, message: 'Please select specialization' }]}
+          >
+            <Select placeholder="Select your medical specialization">
+              <Option value="cardiology">Cardiology</Option>
+              <Option value="neurology">Neurology</Option>
+              <Option value="orthopedics">Orthopedics</Option>
+              <Option value="pediatrics">Pediatrics</Option>
+              <Option value="dermatology">Dermatology</Option>
+              <Option value="psychiatry">Psychiatry</Option>
+              <Option value="general">General Medicine</Option>
+            </Select>
+          </Form.Item>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Qualification *
-                </Label>
-                <Input
-                  {...register("qualification")}
-                  placeholder="MBBS, MD (Specialty)"
-                  className="w-full"
-                />
-                {errors.qualification && (
-                  <p className="text-red-500 text-sm mt-1">{errors.qualification.message}</p>
-                )}
-              </div>
+          <Form.Item
+            name="licenseNumber"
+            label="Medical License Number"
+            rules={[{ required: true, message: 'Please enter your license number' }]}
+          >
+            <Input placeholder="Enter medical license number" />
+          </Form.Item>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Years of Experience *
-                </Label>
-                <Input
-                  {...register("experience")}
-                  type="number"
-                  placeholder="5"
-                  min="0"
-                  max="50"
-                  className="w-full"
-                />
-                {errors.experience && (
-                  <p className="text-red-500 text-sm mt-1">{errors.experience.message}</p>
-                )}
-              </div>
+          <Form.Item
+            name="experience"
+            label="Years of Experience"
+            rules={[{ required: true, message: 'Please enter years of experience' }]}
+          >
+            <Input type="number" placeholder="Enter years of experience" />
+          </Form.Item>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Consultation Fee (₹) *
-                </Label>
-                <Input
-                  {...register("consultationFee")}
-                  type="number"
-                  placeholder="500"
-                  min="100"
-                  className="w-full"
-                />
-                {errors.consultationFee && (
-                  <p className="text-red-500 text-sm mt-1">{errors.consultationFee.message}</p>
-                )}
-              </div>
-            </div>
+          <Form.Item
+            name="qualification"
+            label="Medical Qualification"
+            rules={[{ required: true, message: 'Please enter your qualification' }]}
+          >
+            <Input placeholder="e.g., MBBS, MD, etc." />
+          </Form.Item>
 
-            {/* Languages */}
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-3">
-                Languages Spoken * (Select at least one)
-              </Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {languages.map((language) => (
-                  <div key={language} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`lang-${language}`}
-                      checked={selectedLanguages.includes(language)}
-                      onCheckedChange={(checked) => 
-                        handleLanguageChange(language, checked as boolean)
-                      }
-                    />
-                    <Label htmlFor={`lang-${language}`} className="text-sm">
-                      {language}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-              {errors.languages && (
-                <p className="text-red-500 text-sm mt-1">{errors.languages.message}</p>
-              )}
-            </div>
+          <Form.Item
+            name="hospital"
+            label="Associated Hospital"
+            rules={[{ required: true, message: 'Please enter hospital name' }]}
+          >
+            <Input placeholder="Enter hospital name" />
+          </Form.Item>
 
-            {/* Bio */}
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                Professional Bio * (Minimum 50 characters)
-              </Label>
-              <Textarea
-                {...register("bio")}
-                placeholder="Tell patients about your experience, expertise, and approach to healthcare..."
-                className="w-full"
-                rows={4}
-              />
-              {errors.bio && (
-                <p className="text-red-500 text-sm mt-1">{errors.bio.message}</p>
-              )}
-            </div>
+          <Form.Item
+            name="consultationFee"
+            label="Consultation Fee"
+            rules={[{ required: true, message: 'Please enter consultation fee' }]}
+          >
+            <Input type="number" placeholder="Enter consultation fee" />
+          </Form.Item>
 
-            {/* Awards */}
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                Awards & Recognition (Optional)
-              </Label>
-              <Textarea
-                {...register("awards")}
-                placeholder="List your awards, certifications, and achievements (separate with commas)"
-                className="w-full"
+          <Form.Item
+            name="bio"
+            label="Professional Bio"
+          >
+            <TextArea 
                 rows={3}
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Example: Best Doctor Award 2020, Excellence in Medical Service 2021
-              </p>
-            </div>
+              placeholder="Brief description of your professional background"
+            />
+          </Form.Item>
 
+          <Form.Item
+            name="terms"
+            valuePropName="checked"
+            rules={[{ required: true, message: 'Please accept the terms and conditions' }]}
+          >
+            <Checkbox>
+              I agree to the terms and conditions and privacy policy
+            </Checkbox>
+          </Form.Item>
+
+          <Divider />
+
+          <Form.Item>
+            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+              <Button 
+                icon={<ArrowLeftOutlined />}
+                onClick={() => setLocation('/auth/register')}
+              >
+                Back
+              </Button>
             <Button
-              type="submit"
-              disabled={registrationMutation.isPending}
-              className="w-full medical-blue text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              {registrationMutation.isPending ? "Creating Profile..." : "Complete Registration"}
+                type="primary" 
+                htmlType="submit" 
+                loading={loading}
+                icon={<GraduationCapOutlined />}
+                style={{ minWidth: '120px' }}
+              >
+                Register
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Text type="secondary">
+            Already have an account?{' '}
+            <Button type="link" onClick={() => setLocation('/auth/login')}>
+              Sign In
             </Button>
-          </form>
-        </CardContent>
+          </Text>
+        </div>
       </Card>
     </div>
   );

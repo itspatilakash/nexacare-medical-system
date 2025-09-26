@@ -2,8 +2,8 @@ import React from 'react';
 import { Router, Route, Switch, Redirect } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './hooks/use-auth';
-import { Toaster } from './components/ui/toaster';
-import { useToast } from './hooks/use-toast';
+import { MedicalThemeProvider } from './antd.config.tsx';
+import { App as AntApp } from 'antd';
 
 // Import pages
 import Login from './pages/auth/login';
@@ -49,33 +49,36 @@ function DashboardRedirect() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Switch>
-              {/* Auth Routes */}
-              <Route path="/" component={Login} />
-              <Route path="/login" component={Login} />
-              <Route path="/register" component={Register} />
-              <Route path="/otp-verification" component={OtpVerification} />
-              
-              {/* Dashboard Routes */}
-              <Route path="/dashboard" component={DashboardRedirect} />
-              <Route path="/dashboard/patient" component={PatientDashboard} />
-              <Route path="/dashboard/patient/appointments" component={PatientAppointments} />
-              <Route path="/dashboard/doctor" component={DoctorDashboard} />
-              <Route path="/dashboard/doctor/appointments" component={DoctorAppointments} />
-              <Route path="/dashboard/hospital" component={HospitalDashboard} />
-              <Route path="/dashboard/lab" component={LabDashboard} />
-              <Route path="/dashboard/receptionist" component={ReceptionistDashboard} />
-              
-              {/* Catch all route */}
-              <Route component={NotFound} />
-            </Switch>
-            <Toaster />
-          </div>
-        </Router>
-      </AuthProvider>
+      <MedicalThemeProvider>
+        <AntApp>
+          <AuthProvider>
+            <Router>
+              <div className="medical-container">
+                <Switch>
+                  {/* Auth Routes */}
+                  <Route path="/" component={Login} />
+                  <Route path="/login" component={Login} />
+                  <Route path="/register" component={Register} />
+                  <Route path="/otp-verification" component={OtpVerification} />
+                  
+                  {/* Dashboard Routes */}
+                  <Route path="/dashboard" component={DashboardRedirect} />
+                  <Route path="/dashboard/patient" component={PatientDashboard} />
+                  <Route path="/dashboard/patient/appointments" component={PatientAppointments} />
+                  <Route path="/dashboard/doctor" component={DoctorDashboard} />
+                  <Route path="/dashboard/doctor/appointments" component={DoctorAppointments} />
+                  <Route path="/dashboard/hospital" component={HospitalDashboard} />
+                  <Route path="/dashboard/lab" component={LabDashboard} />
+                  <Route path="/dashboard/receptionist" component={ReceptionistDashboard} />
+                  
+                  {/* Catch all route */}
+                  <Route component={NotFound} />
+                </Switch>
+              </div>
+            </Router>
+          </AuthProvider>
+        </AntApp>
+      </MedicalThemeProvider>
     </QueryClientProvider>
   );
 }

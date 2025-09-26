@@ -1,214 +1,392 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import DashboardLayout from "../../components/layout/dashboard-layout";
-import { Building2, UserRound, User, Calendar, FileText, Settings } from "lucide-react";
+import { 
+  Layout, 
+  Card, 
+  Row, 
+  Col, 
+  Statistic, 
+  Button, 
+  Table, 
+  Tag, 
+  Space, 
+  Typography,
+  Avatar,
+  Menu,
+  Dropdown,
+  Badge,
+  Progress,
+  Timeline,
+  List
+} from 'antd';
+import { 
+  UserOutlined, 
+  CalendarOutlined, 
+  MedicineBoxOutlined, 
+  FileTextOutlined,
+  BellOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  CheckCircleOutlined,
+  TeamOutlined,
+  BankOutlined,
+  UserAddOutlined,
+  BarChartOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../../hooks/use-auth';
+
+const { Header, Content, Sider } = Layout;
+const { Title, Text } = Typography;
 
 export default function HospitalDashboard() {
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { user, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Get dashboard stats
+  const { data: stats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
+    queryFn: async () => ({
+      totalDoctors: 24,
+      totalPatients: 1250,
+      totalAppointments: 156,
+      todayAppointments: 18,
+      completedAppointments: 12,
+      pendingAppointments: 6,
+      totalRevenue: 125000
+    })
   });
 
-  const { data: appointments, isLoading: appointmentsLoading } = useQuery({
+  // Get hospital appointments
+  const { data: appointments } = useQuery({
     queryKey: ['/api/appointments/my'],
+    queryFn: async () => [
+      {
+        id: 1,
+        patient: 'John Doe',
+        doctor: 'Dr. Sarah Johnson',
+        time: '09:00 AM',
+        status: 'confirmed',
+        department: 'Cardiology'
+      },
+      {
+        id: 2,
+        patient: 'Jane Smith',
+        doctor: 'Dr. Michael Chen',
+        time: '10:30 AM',
+        status: 'pending',
+        department: 'Dermatology'
+      },
+      {
+        id: 3,
+        patient: 'Mike Johnson',
+        doctor: 'Dr. Emily Davis',
+        time: '02:00 PM',
+        status: 'confirmed',
+        department: 'Neurology'
+      }
+    ]
   });
 
-  const navigationItems = [
+  // Get recent doctors
+  const { data: doctors } = useQuery({
+    queryKey: ['/api/doctors/list'],
+    queryFn: async () => [
+      {
+        id: 1,
+        name: 'Dr. Sarah Johnson',
+        specialty: 'Cardiology',
+        patients: 45,
+        status: 'active'
+      },
+      {
+        id: 2,
+        name: 'Dr. Michael Chen',
+        specialty: 'Dermatology',
+        patients: 32,
+        status: 'active'
+      },
+      {
+        id: 3,
+        name: 'Dr. Emily Davis',
+        specialty: 'Neurology',
+        patients: 28,
+        status: 'active'
+      }
+    ]
+  });
+
+  const appointmentColumns = [
     {
-      label: "Dashboard",
-      path: "/dashboard/hospital",
-      icon: <Building2 className="w-5 h-5" />,
-      isActive: true,
+      title: 'Patient',
+      dataIndex: 'patient',
+      key: 'patient',
     },
     {
-      label: "Doctors",
-      path: "/dashboard/hospital/doctors",
-      icon: <UserRound className="w-5 h-5" />,
+      title: 'Doctor',
+      dataIndex: 'doctor',
+      key: 'doctor',
     },
     {
-      label: "Patients",
-      path: "/dashboard/hospital/patients",
-      icon: <User className="w-5 h-5" />,
+      title: 'Time',
+      dataIndex: 'time',
+      key: 'time',
     },
     {
-      label: "Appointments",
-      path: "/dashboard/hospital/appointments",
-      icon: <Calendar className="w-5 h-5" />,
+      title: 'Department',
+      dataIndex: 'department',
+      key: 'department',
     },
     {
-      label: "Lab Reports",
-      path: "/dashboard/hospital/lab-reports",
-      icon: <FileText className="w-5 h-5" />,
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={status === 'confirmed' ? 'green' : 'orange'}>
+          {status.toUpperCase()}
+        </Tag>
+      ),
+    },
+  ];
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
     },
     {
-      label: "Settings",
-      path: "/dashboard/hospital/settings",
-      icon: <Settings className="w-5 h-5" />,
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: logout,
+    },
+  ];
+
+  const sidebarMenu = [
+    {
+      key: 'dashboard',
+      icon: <BankOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: 'doctors',
+      icon: <TeamOutlined />,
+      label: 'Doctors',
+    },
+    {
+      key: 'patients',
+      icon: <UserOutlined />,
+      label: 'Patients',
+    },
+    {
+      key: 'appointments',
+      icon: <CalendarOutlined />,
+      label: 'Appointments',
+    },
+    {
+      key: 'reports',
+      icon: <FileTextOutlined />,
+      label: 'Lab Reports',
+    },
+    {
+      key: 'analytics',
+      icon: <BarChartOutlined />,
+      label: 'Analytics',
     },
   ];
 
   return (
-    <DashboardLayout
-      title="City General Hospital"
-      subtitle="Hospital Administrator"
-      icon={<Building2 className="w-6 h-6 text-white" />}
-      navigationItems={navigationItems}
-    >
-      {/* Dashboard Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-blue rounded-lg p-3">
-                <UserRound className="w-6 h-6 text-white" />
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          background: '#fff',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
+        }}
+      >
+        <div style={{ 
+          padding: '16px', 
+          textAlign: 'center',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <BankOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          {!collapsed && (
+            <Title level={4} style={{ margin: '8px 0 0 0', color: '#1890ff' }}>
+              NexaCare Hospital
+            </Title>
+          )}
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Total Doctors</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.doctorsCount || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['dashboard']}
+          items={sidebarMenu}
+          style={{ border: 'none' }}
+        />
+      </Sider>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-green rounded-lg p-3">
-                <User className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Total Patients</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.patientsCount || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Layout>
+        <Header style={{ 
+          background: '#fff', 
+          padding: '0 24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Button
+            type="text"
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: '16px' }}
+          >
+            {collapsed ? '☰' : '✕'}
+          </Button>
+          
+          <Space>
+            <Badge count={8} size="small">
+              <BellOutlined style={{ fontSize: '18px' }} />
+            </Badge>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<BankOutlined />} />
+                <Text strong>{user?.fullName}</Text>
+              </Space>
+            </Dropdown>
+          </Space>
+        </Header>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-yellow-500 rounded-lg p-3">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Today's Appointments</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.todayAppointments || 0}
-                </p>
-              </div>
+        <Content style={{ padding: '24px', background: '#f5f5f5' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <Title level={2} style={{ margin: 0 }}>
+              Hospital Management Dashboard
+            </Title>
+            <Text type="secondary">
+              Welcome back, {user?.fullName} - Hospital Administrator
+            </Text>
             </div>
-          </CardContent>
-        </Card>
 
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+            <Col xs={24} sm={12} md={6}>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-500 rounded-lg p-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Total Appointments</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.totalAppointments || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
+                <Statistic
+                  title="Total Doctors"
+                  value={stats?.totalDoctors || 0}
+                  prefix={<TeamOutlined />}
+                  valueStyle={{ color: '#1890ff' }}
+                />
         </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Appointments */}
+            </Col>
+            <Col xs={24} sm={12} md={6}>
         <Card>
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Appointments</h3>
-          </div>
-          <CardContent className="p-6">
-            {appointmentsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : appointments && appointments.length > 0 ? (
-              <div className="space-y-4">
-                {appointments.slice(0, 5).map((appointment: any) => (
-                  <div key={appointment.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
-                          {appointment.patientName?.charAt(0) || "P"}
-                        </span>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">
-                          {appointment.patientName || "Patient"}
-                        </p>
-                        <p className="text-sm text-medical-gray">
-                          {appointment.reason || "Appointment"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {appointment.appointmentTime}
-                      </p>
-                      <p className="text-sm text-medical-gray">
-                        {new Date(appointment.appointmentDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-medical-gray">No appointments found</p>
-              </div>
-            )}
-          </CardContent>
+                <Statistic
+                  title="Total Patients"
+                  value={stats?.totalPatients || 0}
+                  prefix={<UserOutlined />}
+                  valueStyle={{ color: '#52c41a' }}
+                />
         </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+        <Card>
+                <Statistic
+                  title="Today's Appointments"
+                  value={stats?.todayAppointments || 0}
+                  prefix={<CalendarOutlined />}
+                  valueStyle={{ color: '#faad14' }}
+                />
+        </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+        <Card>
+                <Statistic
+                  title="Monthly Revenue"
+                  value={stats?.totalRevenue || 0}
+                  prefix="₹"
+                  valueStyle={{ color: '#722ed1' }}
+                />
+        </Card>
+            </Col>
+          </Row>
 
         {/* Quick Actions */}
-        <Card>
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-          </div>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Button className="w-full justify-start" variant="outline">
-                <UserRound className="w-5 h-5 mr-3" />
-                Add New Doctor
+          <Card title="Quick Actions" style={{ marginBottom: '24px' }}>
+            <Space wrap>
+              <Button type="primary" icon={<UserAddOutlined />} size="large">
+                Add Doctor
               </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <User className="w-5 h-5 mr-3" />
-                Register Patient
+              <Button icon={<CalendarOutlined />} size="large">
+                Manage Appointments
               </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Calendar className="w-5 h-5 mr-3" />
-                Schedule Appointment
+              <Button icon={<BarChartOutlined />} size="large">
+                View Analytics
               </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <FileText className="w-5 h-5 mr-3" />
-                View Reports
-              </Button>
-            </div>
-          </CardContent>
+            </Space>
+          </Card>
+
+          <Row gutter={[16, 16]}>
+            {/* Today's Appointments */}
+            <Col xs={24} lg={16}>
+              <Card 
+                title="Today's Appointments" 
+                extra={<Button type="link">View All</Button>}
+              >
+                <Table
+                  columns={appointmentColumns}
+                  dataSource={appointments}
+                  pagination={false}
+                  rowKey="id"
+                />
+              </Card>
+            </Col>
+
+            {/* Hospital Stats & Recent Doctors */}
+            <Col xs={24} lg={8}>
+              <Card title="Hospital Performance">
+                <Progress 
+                  percent={75} 
+                  status="active" 
+                  strokeColor="#52c41a"
+                  style={{ marginBottom: '16px' }}
+                />
+                <Text type="secondary">
+                  {stats?.completedAppointments || 0} of {stats?.todayAppointments || 0} appointments completed today
+                </Text>
+              </Card>
+
+              <Card title="Recent Doctors" style={{ marginTop: '16px' }}>
+                <List
+                  dataSource={doctors}
+                  renderItem={(doctor: any) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={<Avatar icon={<UserOutlined />} />}
+                        title={doctor.name}
+                        description={
+                          <Space direction="vertical" size={0}>
+                            <Text type="secondary">{doctor.specialty}</Text>
+                            <Text type="secondary">{doctor.patients} patients</Text>
+                          </Space>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
         </Card>
-      </div>
-    </DashboardLayout>
+            </Col>
+          </Row>
+        </Content>
+      </Layout>
+    </Layout>
   );
 }

@@ -1,200 +1,181 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Ant Design CSS Reset and Medical Theme */
+@import 'antd/dist/reset.css';
 
-/* Manual Tailwind classes for demo - in case Tailwind processing fails */
-.bg-blue-500 { background-color: #3b82f6; }
-.bg-green-500 { background-color: #10b981; }
-.bg-red-500 { background-color: #ef4444; }
-.text-white { color: #ffffff; }
-.text-black { color: #000000; }
-.p-4 { padding: 1rem; }
-.p-8 { padding: 2rem; }
-.rounded { border-radius: 0.25rem; }
-.rounded-lg { border-radius: 0.5rem; }
-.border-2 { border-width: 2px; }
-.border-green-700 { border-color: #047857; }
-.min-h-screen { min-height: 100vh; }
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.flex-col { flex-direction: column; }
-.gap-4 { gap: 1rem; }
-.gap-2 { gap: 0.5rem; }
-.mb-4 { margin-bottom: 1rem; }
-.mt-4 { margin-top: 1rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.px-4 { padding-left: 1rem; padding-right: 1rem; }
-.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-.bg-white { background-color: #ffffff; }
-.bg-gray-100 { background-color: #f3f4f6; }
-.bg-gray-50 { background-color: #f9fafb; }
-.text-gray-900 { color: #111827; }
-.text-gray-600 { color: #4b5563; }
-.text-gray-500 { color: #6b7280; }
-.text-blue-600 { color: #2563eb; }
-.text-center { text-align: center; }
-.font-bold { font-weight: 700; }
-.font-semibold { font-weight: 600; }
-.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-.text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-.text-xs { font-size: 0.75rem; line-height: 1rem; }
-.hover\:bg-blue-700:hover { background-color: #1d4ed8; }
-.hover\:bg-gray-50:hover { background-color: #f9fafb; }
-.hover\:underline:hover { text-decoration: underline; }
-.transition { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-.duration-200 { transition-duration: 200ms; }
-.ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-.max-w-md { max-width: 28rem; }
-.max-w-lg { max-width: 32rem; }
-.max-w-xl { max-width: 36rem; }
-.max-w-2xl { max-width: 42rem; }
-.mx-auto { margin-left: auto; margin-right: auto; }
-.space-y-2 > * + * { margin-top: 0.5rem; }
-.space-y-4 > * + * { margin-top: 1rem; }
-.space-x-2 > * + * { margin-left: 0.5rem; }
-.space-x-4 > * + * { margin-left: 1rem; }
+/* Medical System Custom Styles */
+.medical-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.medical-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8f4fd;
+}
+
+.medical-header {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px 8px 0 0;
+}
+
+.medical-form {
+  padding: 24px;
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+
+.medical-button-primary {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border: none;
+  border-radius: 6px;
+  height: 40px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+.medical-button-success {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border: none;
+  border-radius: 6px;
+  height: 40px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
+}
+
+.medical-input {
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  height: 40px;
+  transition: all 0.3s ease;
+}
+
+.medical-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.medical-title {
+  color: #1890ff;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.medical-subtitle {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.medical-status-banner {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.medical-error-banner {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.medical-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.medical-responsive {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .medical-responsive {
+    padding: 0 16px;
+  }
+  
+  .medical-card {
+    margin: 0 -16px;
+    border-radius: 0;
+  }
+  
+  .medical-form {
+    padding: 16px;
+  }
+}
 
 
+/* Medical theme color variables */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 20 14.3% 4.1%;
-  --muted: 60 4.8% 95.9%;
-  --muted-foreground: 25 5.3% 44.7%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 14.3% 4.1%;
-  --card: 0 0% 100%;
-  --card-foreground: 20 14.3% 4.1%;
-  --border: 20 5.9% 90%;
-  --input: 20 5.9% 90%;
-  --primary: 207 90% 54%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 60 4.8% 95.9%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 60 4.8% 95.9%;
-  --accent-foreground: 24 9.8% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 20 14.3% 4.1%;
-  --radius: 0.5rem;
-  
-  /* Medical theme colors */
-  --medical-blue: 210 100% 40%;
-  --medical-blue-foreground: 0 0% 100%;
-  --medical-green: 142 69% 58%;
-  --medical-green-foreground: 0 0% 100%;
-  --medical-gray: 215 13.8% 34.1%;
-  --medical-light: 210 40% 98%;
-  --medical-red: 0 84.2% 60.2%;
+  --medical-blue: #1890ff;
+  --medical-green: #52c41a;
+  --medical-gray: #8c8c8c;
+  --medical-light: #f0f9ff;
+  --medical-red: #ff4d4f;
 }
 
-.dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --primary: 207 90% 54%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --ring: 240 4.9% 83.9%;
-  --radius: 0.5rem;
+/* Base styles for medical system */
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f5f5f5;
+  color: #262626;
+  margin: 0;
+  padding: 0;
 }
 
-@layer base {
-  body {
-    @apply font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-  }
-}
-
-@layer utilities {
-  .text-foreground {
-    color: hsl(var(--foreground));
-  }
-  
-  .text-muted-foreground {
-    color: hsl(var(--muted-foreground));
-  }
-  
-  .text-card-foreground {
-    color: hsl(var(--card-foreground));
-  }
-  
-  .text-popover-foreground {
-    color: hsl(var(--popover-foreground));
-  }
-  
-  .text-primary-foreground {
-    color: hsl(var(--primary-foreground));
-  }
-  
-  .text-secondary-foreground {
-    color: hsl(var(--secondary-foreground));
-  }
-  
-  .text-accent-foreground {
-    color: hsl(var(--accent-foreground));
-  }
-  
-  .text-destructive-foreground {
-    color: hsl(var(--destructive-foreground));
-  }
-  
-  .medical-blue {
-    background-color: hsl(var(--medical-blue));
-    color: hsl(var(--medical-blue-foreground));
+/* Medical theme utilities */
+.medical-blue {
+  background-color: #1890ff;
+  color: white;
   }
   
   .medical-green {
-    background-color: hsl(var(--medical-green));
-    color: hsl(var(--medical-green-foreground));
+  background-color: #52c41a;
+  color: white;
   }
   
   .text-medical-blue {
-    color: hsl(var(--medical-blue));
+  color: #1890ff;
   }
   
   .text-medical-green {
-    color: hsl(var(--medical-green));
+  color: #52c41a;
   }
   
   .text-medical-gray {
-    color: hsl(var(--medical-gray));
+  color: #8c8c8c;
   }
   
   .bg-medical-light {
-    background-color: hsl(var(--medical-light));
+  background-color: #f0f9ff;
   }
   
   .border-medical-blue {
-    border-color: hsl(var(--medical-blue));
+  border-color: #1890ff;
   }
   
   .hover\:bg-medical-blue:hover {
-    background-color: hsl(var(--medical-blue));
-    color: hsl(var(--medical-blue-foreground));
+  background-color: #1890ff;
+  color: white;
   }
   
   .hover\:bg-medical-green:hover {
-    background-color: hsl(var(--medical-green));
-    color: hsl(var(--medical-green-foreground));
+  background-color: #52c41a;
+  color: white;
   }
   
   .fade-in {
@@ -203,7 +184,6 @@
   
   .slide-in {
     animation: slideIn 0.3s ease-out;
-  }
 }
 
 @keyframes fadeIn {

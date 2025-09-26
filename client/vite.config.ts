@@ -8,9 +8,6 @@ export default defineConfig({
     outDir: '../dist/client',
     emptyOutDir: true,
   },
-  css: {
-    postcss: './postcss.config.mjs',
-  },
   server: {
     port: 5173,
     proxy: {

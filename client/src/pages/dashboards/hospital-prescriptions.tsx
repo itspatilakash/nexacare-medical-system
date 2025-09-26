@@ -1,152 +1,294 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import DashboardLayout from "../../components/layout/dashboard-layout";
-import PrescriptionList from "../../components/prescription-list";
-import { FileText, Download, TrendingUp, Users, Calendar } from "lucide-react";
+import { useState } from "react";
+import { 
+  Layout, 
+  Card, 
+  Row, 
+  Col, 
+  Statistic, 
+  Button, 
+  Table, 
+  Tag, 
+  Space, 
+  Typography,
+  Avatar,
+  Menu,
+  Dropdown,
+  Badge,
+  Progress,
+  Timeline,
+  List
+} from 'antd';
+import { 
+  UserOutlined, 
+  CalendarOutlined, 
+  MedicineBoxOutlined, 
+  FileTextOutlined,
+  BellOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  CheckCircleOutlined,
+  TeamOutlined,
+  BankOutlined,
+  UserAddOutlined,
+  BarChartOutlined,
+  DownloadOutlined,
+  TrendingUpOutlined,
+  UserOutlined as UsersOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../../hooks/use-auth';
+
+const { Header, Content, Sider } = Layout;
+const { Title, Text } = Typography;
 
 export default function HospitalPrescriptionsPage() {
-  const navigationItems = [
+  const { user, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+
+  const userMenuItems = [
     {
-      label: "Dashboard",
-      path: "/dashboard/hospital",
-      icon: <FileText className="w-5 h-5" />,
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
     },
     {
-      label: "Prescriptions",
-      path: "/dashboard/hospital/prescriptions",
-      icon: <FileText className="w-5 h-5" />,
-      isActive: true,
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: logout,
     },
   ];
 
-  const headerActions = (
-    <div className="flex items-center gap-3">
-      <Button variant="outline" className="flex items-center gap-2">
-        <Download className="w-4 h-4" />
-        Export Report
-      </Button>
-      <Button variant="outline" className="flex items-center gap-2">
-        <TrendingUp className="w-4 h-4" />
-        Analytics
-      </Button>
-    </div>
-  );
+  const sidebarMenu = [
+    {
+      key: 'dashboard',
+      icon: <BankOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: 'prescriptions',
+      icon: <FileTextOutlined />,
+      label: 'Prescriptions',
+    },
+  ];
+
+  // Mock prescription data
+  const prescriptions = [
+    {
+      id: 1,
+      patientName: "Jane Doe",
+      doctorName: "Dr. John Smith",
+      date: "2024-09-26",
+      medications: [
+        { name: "Paracetamol", dosage: "500mg", frequency: "3 times daily" },
+        { name: "Amoxicillin", dosage: "250mg", frequency: "2 times daily" }
+      ],
+      status: "active"
+    },
+    {
+      id: 2,
+      patientName: "John Smith",
+      doctorName: "Dr. Sarah Wilson",
+      date: "2024-09-25",
+      medications: [
+        { name: "Ibuprofen", dosage: "400mg", frequency: "2 times daily" }
+      ],
+      status: "completed"
+    }
+  ];
 
   return (
-    <DashboardLayout
-      title="Hospital Prescriptions"
-      subtitle="Manage all prescriptions within the hospital"
-      icon={<FileText className="w-6 h-6 text-white" />}
-      navigationItems={navigationItems}
-      headerActions={headerActions}
-    >
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-blue rounded-lg p-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Total Prescriptions</p>
-                <p className="text-2xl font-semibold text-gray-900">156</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-green rounded-lg p-3">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Active Doctors</p>
-                <p className="text-2xl font-semibold text-gray-900">12</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-500 rounded-lg p-3">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">This Month</p>
-                <p className="text-2xl font-semibold text-gray-900">45</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-yellow-500 rounded-lg p-3">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Growth Rate</p>
-                <p className="text-2xl font-semibold text-gray-900">+12%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Department Overview */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Prescriptions by Department</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          background: '#fff',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
+        }}
+      >
+        <div style={{ 
+          padding: '16px', 
+          textAlign: 'center',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <BankOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          {!collapsed && (
+            <Title level={4} style={{ margin: '8px 0 0 0', color: '#1890ff' }}>
+              NexaCare Hospital
+            </Title>
+          )}
+        </div>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['prescriptions']}
+          style={{ borderRight: 0 }}
+          items={sidebarMenu}
+        />
+      </Sider>
+      
+      <Layout>
+        <Header style={{ 
+          padding: '0 24px', 
+          background: '#fff', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+        }}>
+          <Button
+            type="text"
+            icon={collapsed ? <PlusOutlined /> : <PlusOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: '16px', width: 64, height: 64 }}
+          />
+          <Space>
+            <Badge count={8} size="small">
+              <BellOutlined style={{ fontSize: '18px' }} />
+            </Badge>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<BankOutlined />} />
+                <Text strong>{user?.fullName}</Text>
+              </Space>
+            </Dropdown>
+          </Space>
+        </Header>
+        
+        <Content style={{ margin: '24px', background: '#f5f5f5', minHeight: 'calc(100vh - 112px)' }}>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
-                <h4 className="font-medium text-gray-900">Cardiology</h4>
-                <p className="text-sm text-gray-600">Dr. Sarah Johnson</p>
+                <Title level={2} style={{ margin: '0 0 8px 0', color: '#1890ff' }}>
+                  <FileTextOutlined style={{ marginRight: '8px' }} />
+                  Hospital Prescriptions
+                </Title>
+                <Text type="secondary">Manage all hospital prescriptions</Text>
               </div>
-              <Badge variant="default">32 prescriptions</Badge>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <h4 className="font-medium text-gray-900">Neurology</h4>
-                <p className="text-sm text-gray-600">Dr. Michael Chen</p>
-              </div>
-              <Badge variant="default">28 prescriptions</Badge>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <h4 className="font-medium text-gray-900">Orthopedics</h4>
-                <p className="text-sm text-gray-600">Dr. Emily Rodriguez</p>
-              </div>
-              <Badge variant="default">24 prescriptions</Badge>
+              <Space>
+                <Button icon={<DownloadOutlined />}>
+                  Export Report
+                </Button>
+                <Button type="primary" icon={<PlusOutlined />}>
+                  Generate Report
+                </Button>
+              </Space>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Prescriptions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Hospital Prescriptions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PrescriptionList 
-            role="hospital" 
-            showActions={false} 
-            showFilters={true}
-          />
-        </CardContent>
-      </Card>
-    </DashboardLayout>
+          {/* Quick Stats */}
+          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Total Prescriptions"
+                  value={1247}
+                  prefix={<FileTextOutlined style={{ color: '#1890ff' }} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="This Month"
+                  value={156}
+                  prefix={<TrendingUpOutlined style={{ color: '#52c41a' }} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Active Doctors"
+                  value={24}
+                  prefix={<UsersOutlined style={{ color: '#faad14' }} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Today"
+                  value={18}
+                  prefix={<CalendarOutlined style={{ color: '#722ed1' }} />}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Prescriptions List */}
+          <Card title="All Hospital Prescriptions">
+            <div>
+              {prescriptions.map((prescription) => (
+                <Card 
+                  key={prescription.id} 
+                  style={{ marginBottom: '16px' }}
+                  title={
+                    <Space>
+                      <FileTextOutlined />
+                      Prescription #{prescription.id}
+                    </Space>
+                  }
+                  extra={
+                    <Space>
+                      <Tag color={prescription.status === 'active' ? 'green' : 'blue'}>
+                        {prescription.status}
+                      </Tag>
+                      <Button type="primary" icon={<DownloadOutlined />}>
+                        Download
+                      </Button>
+                    </Space>
+                  }
+                >
+                  <Row gutter={[16, 16]}>
+                    <Col span={6}>
+                      <Text strong>Patient: </Text>
+                      <Text>{prescription.patientName}</Text>
+                    </Col>
+                    <Col span={6}>
+                      <Text strong>Doctor: </Text>
+                      <Text>{prescription.doctorName}</Text>
+                    </Col>
+                    <Col span={6}>
+                      <Text strong>Date: </Text>
+                      <Text>{prescription.date}</Text>
+                    </Col>
+                    <Col span={6}>
+                      <Text strong>Medications: </Text>
+                      <Text>{prescription.medications.length}</Text>
+                    </Col>
+                  </Row>
+                  
+                  <div style={{ marginTop: '16px' }}>
+                    <Title level={5}>Medications:</Title>
+                    <List
+                      dataSource={prescription.medications}
+                      renderItem={(medication) => (
+                        <List.Item>
+                          <List.Item.Meta
+                            title={medication.name}
+                            description={`${medication.dosage} - ${medication.frequency}`}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+        </Content>
+      </Layout>
+    </Layout>
   );
+}
 } 

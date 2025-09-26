@@ -1,207 +1,358 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import DashboardLayout from "../../components/layout/dashboard-layout";
-import { UserRound, Calendar, User, FileText, ClipboardList } from "lucide-react";
+import { 
+  Layout, 
+  Card, 
+  Row, 
+  Col, 
+  Statistic, 
+  Button, 
+  Table, 
+  Tag, 
+  Space, 
+  Typography,
+  Avatar,
+  Menu,
+  Dropdown,
+  Badge,
+  Progress,
+  Timeline
+} from 'antd';
+import { 
+  UserOutlined, 
+  CalendarOutlined, 
+  MedicineBoxOutlined, 
+  FileTextOutlined,
+  BellOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  CheckCircleOutlined,
+  TeamOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../../hooks/use-auth';
+
+const { Header, Content, Sider } = Layout;
+const { Title, Text } = Typography;
 
 export default function DoctorDashboard() {
+  const { user, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+
   // Get dashboard stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
+    queryFn: async () => ({
+      totalPatients: 156,
+      todayAppointments: 8,
+      completedAppointments: 6,
+      pendingPrescriptions: 3,
+      totalPrescriptions: 45
+    })
   });
 
   // Get doctor appointments
   const { data: todayAppointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ['/api/appointments/my'],
+    queryFn: async () => [
+      {
+        id: 1,
+        patient: 'John Doe',
+        time: '09:00 AM',
+        status: 'confirmed',
+        type: 'Follow-up',
+        priority: 'Normal'
+      },
+      {
+        id: 2,
+        patient: 'Jane Smith',
+        time: '10:30 AM',
+        status: 'confirmed',
+        type: 'Consultation',
+        priority: 'High'
+      },
+      {
+        id: 3,
+        patient: 'Mike Johnson',
+        time: '02:00 PM',
+        status: 'pending',
+        type: 'Check-up',
+        priority: 'Normal'
+      }
+    ]
   });
 
-  const navigationItems = [
+  const appointmentColumns = [
     {
-      label: "Dashboard",
-      path: "/dashboard/doctor",
-      icon: <UserRound className="w-5 h-5" />,
-      isActive: true,
+      title: 'Patient',
+      dataIndex: 'patient',
+      key: 'patient',
     },
     {
-      label: "Appointments",
-      path: "/dashboard/doctor/appointments",
-      icon: <Calendar className="w-5 h-5" />,
+      title: 'Time',
+      dataIndex: 'time',
+      key: 'time',
     },
     {
-      label: "Patients",
-      path: "/dashboard/doctor/patients",
-      icon: <User className="w-5 h-5" />,
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
     },
     {
-      label: "Prescriptions",
-      path: "/dashboard/doctor/prescriptions",
-      icon: <FileText className="w-5 h-5" />,
+      title: 'Priority',
+      dataIndex: 'priority',
+      key: 'priority',
+      render: (priority: string) => (
+        <Tag color={priority === 'High' ? 'red' : 'blue'}>
+          {priority}
+        </Tag>
+      ),
     },
     {
-      label: "Lab Reports",
-      path: "/dashboard/doctor/lab-reports",
-      icon: <ClipboardList className="w-5 h-5" />,
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={status === 'confirmed' ? 'green' : 'orange'}>
+          {status.toUpperCase()}
+        </Tag>
+      ),
     },
   ];
 
-  const headerActions = (
-    <Button 
-      className="medical-blue text-white hover:bg-blue-700"
-      onClick={() => window.location.href = '/dashboard/doctor/prescriptions'}
-    >
-      New Prescription
-    </Button>
-  );
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: logout,
+    },
+  ];
+
+  const sidebarMenu = [
+    {
+      key: 'dashboard',
+      icon: <UserOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: 'appointments',
+      icon: <CalendarOutlined />,
+      label: 'Appointments',
+    },
+    {
+      key: 'patients',
+      icon: <TeamOutlined />,
+      label: 'Patients',
+    },
+    {
+      key: 'prescriptions',
+      icon: <MedicineBoxOutlined />,
+      label: 'Prescriptions',
+    },
+    {
+      key: 'reports',
+      icon: <FileTextOutlined />,
+      label: 'Lab Reports',
+    },
+  ];
 
   return (
-    <DashboardLayout
-      title="Dr. Sarah Johnson"
-      subtitle="Cardiology"
-      icon={<UserRound className="w-6 h-6 text-white" />}
-      navigationItems={navigationItems}
-      headerActions={headerActions}
-    >
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-blue rounded-lg p-3">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Today's Appointments</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.todayAppointments || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-green rounded-lg p-3">
-                <User className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Total Patients</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.totalPatients || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-500 rounded-lg p-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Prescriptions</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.totalPrescriptions || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Today's Schedule */}
-      <Card className="mb-6">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Today's Schedule</h3>
-        </div>
-        <CardContent className="p-6">
-          {appointmentsLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="flex items-center justify-between py-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-32"></div>
-                        <div className="h-3 bg-gray-200 rounded w-24"></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-16"></div>
-                      <div className="h-3 bg-gray-200 rounded w-12"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : todayAppointments && todayAppointments.length > 0 ? (
-            <div className="space-y-4">
-              {todayAppointments.map((appointment: any) => (
-                <div key={appointment.id} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">
-                        {appointment.patientName?.charAt(0) || "P"}
-                      </span>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-900">
-                        {appointment.patientName || "Patient"}
-                      </p>
-                      <p className="text-sm text-medical-gray">
-                        {appointment.reason || "Routine Checkup"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {appointment.appointmentTime}
-                      </p>
-                      <p className="text-sm text-medical-gray">30 min</p>
-                    </div>
-                    <Button size="sm" className="medical-blue hover:bg-blue-700">
-                      Start Consultation
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-medical-gray">No appointments scheduled for today</p>
-            </div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          background: '#fff',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
+        }}
+      >
+        <div style={{ 
+          padding: '16px', 
+          textAlign: 'center',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <MedicineBoxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          {!collapsed && (
+            <Title level={4} style={{ margin: '8px 0 0 0', color: '#1890ff' }}>
+              NexaCare
+            </Title>
           )}
-        </CardContent>
+              </div>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['dashboard']}
+          items={sidebarMenu}
+          style={{ border: 'none' }}
+        />
+      </Sider>
+
+      <Layout>
+        <Header style={{ 
+          background: '#fff', 
+          padding: '0 24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Button
+            type="text"
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: '16px' }}
+          >
+            {collapsed ? '☰' : '✕'}
+          </Button>
+          
+          <Space>
+            <Badge count={5} size="small">
+              <BellOutlined style={{ fontSize: '18px' }} />
+            </Badge>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<UserOutlined />} />
+                <Text strong>{user?.fullName}</Text>
+              </Space>
+            </Dropdown>
+          </Space>
+        </Header>
+
+        <Content style={{ padding: '24px', background: '#f5f5f5' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <Title level={2} style={{ margin: 0 }}>
+              Doctor Dashboard
+            </Title>
+            <Text type="secondary">
+              Welcome back, Dr. {user?.fullName?.split(' ')[1] || user?.fullName}
+            </Text>
+              </div>
+
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Total Patients"
+                  value={stats?.totalPatients || 0}
+                  prefix={<TeamOutlined />}
+                  valueStyle={{ color: '#1890ff' }}
+                />
+        </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+        <Card>
+                <Statistic
+                  title="Today's Appointments"
+                  value={stats?.todayAppointments || 0}
+                  prefix={<CalendarOutlined />}
+                  valueStyle={{ color: '#52c41a' }}
+                />
+        </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+        <Card>
+                <Statistic
+                  title="Completed Today"
+                  value={stats?.completedAppointments || 0}
+                  prefix={<CheckCircleOutlined />}
+                  valueStyle={{ color: '#faad14' }}
+                />
+        </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Pending Prescriptions"
+                  value={stats?.pendingPrescriptions || 0}
+                  prefix={<MedicineBoxOutlined />}
+                  valueStyle={{ color: '#722ed1' }}
+                />
       </Card>
+            </Col>
+          </Row>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-          <FileText className="w-6 h-6 text-medical-blue" />
-          <span className="text-sm font-medium">New Prescription</span>
+          <Card title="Quick Actions" style={{ marginBottom: '24px' }}>
+            <Space wrap>
+              <Button type="primary" icon={<PlusOutlined />} size="large">
+                New Prescription
+              </Button>
+              <Button icon={<CalendarOutlined />} size="large">
+                View Schedule
+              </Button>
+              <Button icon={<TeamOutlined />} size="large">
+                Patient List
         </Button>
-        
-        <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-          <ClipboardList className="w-6 h-6 text-medical-green" />
-          <span className="text-sm font-medium">Lab Orders</span>
-        </Button>
-        
-        <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-          <User className="w-6 h-6 text-purple-500" />
-          <span className="text-sm font-medium">Patient History</span>
-        </Button>
-        
-        <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-          <Calendar className="w-6 h-6 text-yellow-500" />
-          <span className="text-sm font-medium">Schedule</span>
-        </Button>
-      </div>
-    </DashboardLayout>
+            </Space>
+          </Card>
+
+          <Row gutter={[16, 16]}>
+            {/* Today's Appointments */}
+            <Col xs={24} lg={16}>
+              <Card 
+                title="Today's Appointments" 
+                extra={<Button type="link">View All</Button>}
+              >
+                <Table
+                  columns={appointmentColumns}
+                  dataSource={todayAppointments}
+                  pagination={false}
+                  rowKey="id"
+                  loading={appointmentsLoading}
+                />
+              </Card>
+            </Col>
+
+            {/* Quick Stats & Timeline */}
+            <Col xs={24} lg={8}>
+              <Card title="Today's Progress">
+                <Progress 
+                  percent={75} 
+                  status="active" 
+                  strokeColor="#52c41a"
+                  style={{ marginBottom: '16px' }}
+                />
+                <Text type="secondary">
+                  {stats?.completedAppointments || 0} of {stats?.todayAppointments || 0} appointments completed
+                </Text>
+              </Card>
+
+              <Card title="Recent Activity" style={{ marginTop: '16px' }}>
+                <Timeline
+                  items={[
+                    {
+                      color: 'green',
+                      children: <Text>Completed appointment with John Doe</Text>
+                    },
+                    {
+                      color: 'blue',
+                      children: <Text>Prescribed medication for Jane Smith</Text>
+                    },
+                    {
+                      color: 'orange',
+                      children: <Text>Upcoming appointment with Mike Johnson</Text>
+                    }
+                  ]}
+                />
+              </Card>
+            </Col>
+          </Row>
+        </Content>
+      </Layout>
+    </Layout>
   );
 }

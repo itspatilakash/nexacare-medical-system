@@ -1,309 +1,417 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import DashboardLayout from "../../components/layout/dashboard-layout";
-import AppointmentBookingModal from "../../components/modals/appointment-booking-modal";
-import { Users, Calendar, UserPlus, Clock, Phone, Settings } from "lucide-react";
+import { 
+  Layout, 
+  Card, 
+  Row, 
+  Col, 
+  Statistic, 
+  Button, 
+  Table, 
+  Tag, 
+  Space, 
+  Typography,
+  Avatar,
+  Menu,
+  Dropdown,
+  Badge,
+  Progress,
+  Timeline,
+  List,
+  Modal
+} from 'antd';
+import { 
+  UserOutlined, 
+  CalendarOutlined, 
+  MedicineBoxOutlined, 
+  FileTextOutlined,
+  BellOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  CheckCircleOutlined,
+  TeamOutlined,
+  UserAddOutlined,
+  ClockCircleOutlined,
+  PhoneOutlined,
+  LoginOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../../hooks/use-auth';
+
+const { Header, Content, Sider } = Layout;
+const { Title, Text } = Typography;
 
 export default function ReceptionistDashboard() {
+  const { user, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  // Get dashboard stats
+  const { data: stats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
+    queryFn: async () => ({
+      totalAppointments: 45,
+      todayAppointments: 18,
+      completedAppointments: 12,
+      pendingAppointments: 6,
+      walkInPatients: 8,
+      totalPatients: 1250
+    })
   });
 
-  const { data: appointments, isLoading: appointmentsLoading } = useQuery({
+  // Get appointments
+  const { data: appointments } = useQuery({
     queryKey: ['/api/appointments/my'],
+    queryFn: async () => [
+      {
+        id: 1,
+        patient: 'John Doe',
+        doctor: 'Dr. Sarah Johnson',
+        time: '09:00 AM',
+        status: 'confirmed',
+        department: 'Cardiology',
+        phone: '+91 98765 43210'
+      },
+      {
+        id: 2,
+        patient: 'Jane Smith',
+        doctor: 'Dr. Michael Chen',
+        time: '10:30 AM',
+        status: 'pending',
+        department: 'Dermatology',
+        phone: '+91 98765 43211'
+      },
+      {
+        id: 3,
+        patient: 'Mike Johnson',
+        doctor: 'Dr. Emily Davis',
+        time: '02:00 PM',
+        status: 'waiting',
+        department: 'Neurology',
+        phone: '+91 98765 43212'
+      }
+    ]
   });
 
-  const navigationItems = [
+  // Get walk-in patients
+  const { data: walkInPatients } = useQuery({
+    queryKey: ['/api/walk-in-patients'],
+    queryFn: async () => [
+      {
+        id: 1,
+        name: 'Alice Brown',
+        time: '09:15 AM',
+        reason: 'Emergency',
+        status: 'waiting'
+      },
+      {
+        id: 2,
+        name: 'Bob Wilson',
+        time: '10:45 AM',
+        reason: 'Follow-up',
+        status: 'processing'
+      }
+    ]
+  });
+
+  const appointmentColumns = [
     {
-      label: "Dashboard",
-      path: "/dashboard/receptionist",
-      icon: <Users className="w-5 h-5" />,
-      isActive: true,
+      title: 'Patient',
+      dataIndex: 'patient',
+      key: 'patient',
     },
     {
-      label: "Appointments",
-      path: "/dashboard/receptionist/appointments",
-      icon: <Calendar className="w-5 h-5" />,
+      title: 'Doctor',
+      dataIndex: 'doctor',
+      key: 'doctor',
     },
     {
-      label: "Walk-in Registration",
-      path: "/dashboard/receptionist/walk-in",
-      icon: <UserPlus className="w-5 h-5" />,
+      title: 'Time',
+      dataIndex: 'time',
+      key: 'time',
     },
     {
-      label: "Patient Check-in",
-      path: "/dashboard/receptionist/check-in",
-      icon: <Clock className="w-5 h-5" />,
+      title: 'Department',
+      dataIndex: 'department',
+      key: 'department',
     },
     {
-      label: "Contact Directory",
-      path: "/dashboard/receptionist/contacts",
-      icon: <Phone className="w-5 h-5" />,
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        const color = status === 'confirmed' ? 'green' : status === 'waiting' ? 'orange' : 'blue';
+        return <Tag color={color}>{status.toUpperCase()}</Tag>;
+      },
     },
     {
-      label: "Settings",
-      path: "/dashboard/receptionist/settings",
-      icon: <Settings className="w-5 h-5" />,
+      title: 'Actions',
+      key: 'actions',
+      render: (record: any) => (
+        <Space>
+          <Button size="small" type="primary">Check-in</Button>
+          <Button size="small">Call</Button>
+        </Space>
+      ),
     },
   ];
 
-  const headerActions = (
-    <div className="flex space-x-2">
-      <Button 
-        variant="outline"
-        onClick={() => setIsBookingModalOpen(true)}
-      >
-        Walk-in Appointment
-      </Button>
-      <Button className="medical-blue text-white hover:bg-blue-700">
-        Register Patient
-      </Button>
-    </div>
-  );
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: logout,
+    },
+  ];
 
-  const todayAppointments = appointments?.filter((apt: any) => {
-    const today = new Date().toDateString();
-    return new Date(apt.appointmentDate).toDateString() === today;
-  }) || [];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-medical-green text-white';
-      case 'scheduled':
-        return 'bg-medical-blue text-white';
-      case 'cancelled':
-        return 'bg-medical-red text-white';
-      case 'no-show':
-        return 'bg-gray-500 text-white';
-      default:
-        return 'bg-yellow-500 text-white';
-    }
-  };
+  const sidebarMenu = [
+    {
+      key: 'dashboard',
+      icon: <TeamOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: 'appointments',
+      icon: <CalendarOutlined />,
+      label: 'Appointments',
+    },
+    {
+      key: 'walkin',
+      icon: <UserAddOutlined />,
+      label: 'Walk-in Registration',
+    },
+    {
+      key: 'checkin',
+      icon: <LoginOutlined />,
+      label: 'Patient Check-in',
+    },
+    {
+      key: 'contacts',
+      icon: <PhoneOutlined />,
+      label: 'Contact Directory',
+    },
+  ];
 
   return (
-    <DashboardLayout
-      title="Reception Desk"
-      subtitle="City General Hospital"
-      icon={<Users className="w-6 h-6 text-white" />}
-      navigationItems={navigationItems}
-      headerActions={headerActions}
-    >
-      {/* Reception Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-blue rounded-lg p-3">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Today's Appointments</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : todayAppointments.length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-green rounded-lg p-3">
-                <UserPlus className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Walk-ins Today</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.walkinsToday || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-yellow-500 rounded-lg p-3">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Waiting Patients</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.waitingPatients || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-500 rounded-lg p-3">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Total Patients</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? "..." : stats?.totalPatients || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Today's Schedule */}
-      <Card className="mb-6">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Today's Appointment Schedule</h3>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
-                Refresh
-              </Button>
-              <Button 
-                size="sm" 
-                className="medical-blue hover:bg-blue-700"
-                onClick={() => setIsBookingModalOpen(true)}
-              >
-                Add Walk-in
-              </Button>
-            </div>
-          </div>
-        </div>
-        <CardContent className="p-6">
-          {appointmentsLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="flex items-center justify-between py-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-32"></div>
-                        <div className="h-3 bg-gray-200 rounded w-24"></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-16"></div>
-                      <div className="h-3 bg-gray-200 rounded w-12"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : todayAppointments.length > 0 ? (
-            <div className="space-y-4">
-              {todayAppointments
-                .sort((a: any, b: any) => a.appointmentTime.localeCompare(b.appointmentTime))
-                .map((appointment: any) => (
-                  <div key={appointment.id} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
-                          {appointment.patientName?.charAt(0) || "P"}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-900">
-                          {appointment.patientName || "Patient"}
-                        </p>
-                        <p className="text-sm text-medical-gray">
-                          Dr. {appointment.doctorName || "Doctor"} - {appointment.reason}
-                        </p>
-                        <p className="text-xs text-medical-gray">
-                          Type: {appointment.type === 'walk-in' ? 'Walk-in' : 'Scheduled'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">
-                          {appointment.appointmentTime}
-                        </p>
-                        <Badge className={getStatusColor(appointment.status)}>
-                          {appointment.status?.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <div className="flex space-x-2">
-                        {appointment.status === 'scheduled' && (
-                          <Button size="sm" className="medical-green hover:bg-green-600">
-                            Check In
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline">
-                          Details
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-medical-gray">No appointments scheduled for today</p>
-              <Button 
-                className="mt-4 medical-blue hover:bg-blue-700"
-                onClick={() => setIsBookingModalOpen(true)}
-              >
-                Schedule First Appointment
-              </Button>
-            </div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          background: '#fff',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
+        }}
+      >
+        <div style={{ 
+          padding: '16px', 
+          textAlign: 'center',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <TeamOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          {!collapsed && (
+            <Title level={4} style={{ margin: '8px 0 0 0', color: '#1890ff' }}>
+              NexaCare Reception
+            </Title>
           )}
-        </CardContent>
+              </div>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['dashboard']}
+          items={sidebarMenu}
+          style={{ border: 'none' }}
+        />
+      </Sider>
+
+      <Layout>
+        <Header style={{ 
+          background: '#fff', 
+          padding: '0 24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Button
+            type="text"
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: '16px' }}
+          >
+            {collapsed ? '☰' : '✕'}
+          </Button>
+          
+          <Space>
+            <Badge count={12} size="small">
+              <BellOutlined style={{ fontSize: '18px' }} />
+            </Badge>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<TeamOutlined />} />
+                <Text strong>{user?.fullName}</Text>
+              </Space>
+            </Dropdown>
+          </Space>
+        </Header>
+
+        <Content style={{ padding: '24px', background: '#f5f5f5' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <Title level={2} style={{ margin: 0 }}>
+              Reception Dashboard
+            </Title>
+            <Text type="secondary">
+              Welcome back, {user?.fullName} - Receptionist
+            </Text>
+              </div>
+
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Today's Appointments"
+                  value={stats?.todayAppointments || 0}
+                  prefix={<CalendarOutlined />}
+                  valueStyle={{ color: '#1890ff' }}
+                />
+        </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+        <Card>
+                <Statistic
+                  title="Completed"
+                  value={stats?.completedAppointments || 0}
+                  prefix={<CheckCircleOutlined />}
+                  valueStyle={{ color: '#52c41a' }}
+                />
+        </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+        <Card>
+                <Statistic
+                  title="Waiting"
+                  value={stats?.pendingAppointments || 0}
+                  prefix={<ClockCircleOutlined />}
+                  valueStyle={{ color: '#faad14' }}
+                />
+        </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+        <Card>
+                <Statistic
+                  title="Walk-in Patients"
+                  value={stats?.walkInPatients || 0}
+                  prefix={<UserAddOutlined />}
+                  valueStyle={{ color: '#722ed1' }}
+                />
+        </Card>
+            </Col>
+          </Row>
+
+          {/* Quick Actions */}
+          <Card title="Quick Actions" style={{ marginBottom: '24px' }}>
+            <Space wrap>
+              <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => setIsBookingModalOpen(true)}>
+                Book Appointment
+              </Button>
+              <Button icon={<UserAddOutlined />} size="large">
+                Walk-in Registration
+              </Button>
+              <Button icon={<LoginOutlined />} size="large">
+                Patient Check-in
+              </Button>
+            </Space>
       </Card>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Button 
-          variant="outline" 
-          className="h-20 flex flex-col items-center justify-center space-y-2"
-          onClick={() => setIsBookingModalOpen(true)}
-        >
-          <UserPlus className="w-6 h-6 text-medical-blue" />
-          <span className="text-sm font-medium">Walk-in Registration</span>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="h-20 flex flex-col items-center justify-center space-y-2"
-        >
-          <Clock className="w-6 h-6 text-medical-green" />
-          <span className="text-sm font-medium">Patient Check-in</span>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="h-20 flex flex-col items-center justify-center space-y-2"
-        >
-          <Calendar className="w-6 h-6 text-purple-500" />
-          <span className="text-sm font-medium">View Schedule</span>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="h-20 flex flex-col items-center justify-center space-y-2"
-        >
-          <Phone className="w-6 h-6 text-yellow-500" />
-          <span className="text-sm font-medium">Contact Directory</span>
+          <Row gutter={[16, 16]}>
+            {/* Today's Appointments */}
+            <Col xs={24} lg={16}>
+              <Card 
+                title="Today's Appointments" 
+                extra={<Button type="link">View All</Button>}
+              >
+                <Table
+                  columns={appointmentColumns}
+                  dataSource={appointments}
+                  pagination={false}
+                  rowKey="id"
+                />
+              </Card>
+            </Col>
+
+            {/* Walk-in Patients & Queue Status */}
+            <Col xs={24} lg={8}>
+              <Card title="Walk-in Patients">
+                <List
+                  dataSource={walkInPatients}
+                  renderItem={(patient: any) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        title={patient.name}
+                        description={
+                          <Space direction="vertical" size={0}>
+                            <Text type="secondary">{patient.time} - {patient.reason}</Text>
+                            <Tag color={patient.status === 'waiting' ? 'orange' : 'blue'}>
+                              {patient.status}
+                            </Tag>
+                          </Space>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              </Card>
+
+              <Card title="Queue Status" style={{ marginTop: '16px' }}>
+                <Progress 
+                  percent={67} 
+                  status="active" 
+                  strokeColor="#52c41a"
+                  style={{ marginBottom: '16px' }}
+                />
+                <Text type="secondary">
+                  {stats?.completedAppointments || 0} of {stats?.todayAppointments || 0} appointments completed
+                </Text>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Booking Modal */}
+          <Modal
+            title="Book New Appointment"
+            open={isBookingModalOpen}
+            onCancel={() => setIsBookingModalOpen(false)}
+            footer={null}
+            width={600}
+          >
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <CalendarOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
+              <Title level={3}>Appointment Booking</Title>
+              <Text type="secondary">
+                This feature will be implemented in the next phase
+              </Text>
+              <div style={{ marginTop: '24px' }}>
+                <Button type="primary" onClick={() => setIsBookingModalOpen(false)}>
+                  Close
         </Button>
       </div>
-
-      <AppointmentBookingModal 
-        isOpen={isBookingModalOpen} 
-        onClose={() => setIsBookingModalOpen(false)}
-        isWalkIn={true}
-      />
-    </DashboardLayout>
+            </div>
+          </Modal>
+        </Content>
+      </Layout>
+    </Layout>
   );
 }

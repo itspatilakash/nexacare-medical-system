@@ -1,450 +1,254 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { useToast } from "../../hooks/use-toast";
+import { 
+  Card, 
+  Form, 
+  Input, 
+  Button, 
+  Select, 
+  DatePicker, 
+  Space, 
+  Typography, 
+  Row, 
+  Col,
+  App,
+  Divider
+} from 'antd';
+import { 
+  UserOutlined, 
+  ArrowLeftOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  HeartOutlined
+} from '@ant-design/icons';
 import { apiRequest } from "../../lib/queryClient";
-import { User, ArrowLeft } from "lucide-react";
 
-const patientRegistrationSchema = z.object({
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  gender: z.string().min(1, "Please select gender"),
-  bloodGroup: z.string().min(1, "Please select blood group"),
-  height: z.string().transform(Number).pipe(z.number().min(50).max(250, "Height should be between 50-250 cm")),
-  weight: z.string().transform(Number).pipe(z.number().min(10).max(300, "Weight should be between 10-300 kg")),
-  address: z.string().min(10, "Complete address is required"),
-  city: z.string().min(2, "City is required"),
-  state: z.string().min(2, "State is required"),
-  zipCode: z.string().min(5, "Valid zip code is required"),
-  emergencyContact: z.string().min(10, "Emergency contact number is required"),
-  emergencyContactName: z.string().min(2, "Emergency contact name is required"),
-  emergencyRelation: z.string().min(1, "Please select relation"),
-  medicalHistory: z.string().optional(),
-  allergies: z.string().optional(),
-  currentMedications: z.string().optional(),
-  chronicConditions: z.string().optional(),
-  insuranceProvider: z.string().optional(),
-  insuranceNumber: z.string().optional(),
-  occupation: z.string().min(2, "Occupation is required"),
-  maritalStatus: z.string().min(1, "Please select marital status"),
-});
-
-type PatientRegistrationForm = z.infer<typeof patientRegistrationSchema>;
-
-const bloodGroups = ["A+", "B+", "AB+", "O+", "A-", "B-", "AB-", "O-"];
-const relations = ["Spouse", "Parent", "Child", "Sibling", "Friend", "Other"];
-const maritalStatuses = ["Single", "Married", "Divorced", "Widowed"];
-const insuranceProviders = ["Star Health", "HDFC ERGO", "Bajaj Allianz", "Max Bupa", "ICICI Lombard", "None"];
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
 export default function PatientRegistration() {
+  const { message } = App.useApp();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<PatientRegistrationForm>({
-    resolver: zodResolver(patientRegistrationSchema),
-    defaultValues: {
-      height: "170",
-      weight: "70",
-    }
-  });
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const registrationMutation = useMutation({
-    mutationFn: async (data: PatientRegistrationForm) => {
-      const response = await apiRequest('/api/patients/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          currentMedications: data.currentMedications ? data.currentMedications.split(',').map(m => m.trim()) : [],
-          chronicConditions: data.chronicConditions ? data.chronicConditions.split(',').map(c => c.trim()) : [],
-        }),
-      });
-      return response;
+    mutationFn: async (data: any) => {
+      return apiRequest('POST', '/auth/register/patient', data);
     },
     onSuccess: () => {
-      toast({
-        title: "Registration Successful",
-        description: "Patient profile created successfully! You can now login.",
-      });
-      setLocation("/login");
+      message.success('Registration successful! Please check your phone for OTP verification.');
+      setLocation('/auth/otp-verification');
     },
     onError: (error: any) => {
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Failed to create patient profile",
-        variant: "destructive",
-      });
+      message.error(error.message || 'Registration failed. Please try again.');
     },
   });
 
-  const onSubmit = (data: PatientRegistrationForm) => {
-    registrationMutation.mutate(data);
+  const handleSubmit = async (values: any) => {
+    setLoading(true);
+    try {
+      await registrationMutation.mutateAsync({
+        ...values,
+        dateOfBirth: values.dateOfBirth?.format('YYYY-MM-DD'),
+        role: 'patient'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl">
-        <CardContent className="p-8">
-          <div className="flex items-center mb-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation("/register")}
-              className="mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <User className="w-8 h-8 text-medical-blue mr-3" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Patient Registration</h1>
-              <p className="text-medical-gray">Complete your medical profile</p>
-            </div>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <Card 
+        style={{ 
+          width: '100%', 
+          maxWidth: '500px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          borderRadius: '12px'
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <UserOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
+          <Title level={2} style={{ margin: '0 0 8px 0', color: '#1890ff' }}>
+            Patient Registration
+          </Title>
+          <Text type="secondary">
+            Create your patient account to access medical services
+          </Text>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date of Birth *
-                </Label>
-                <Input
-                  {...register("dateOfBirth")}
-                  type="date"
-                  className="w-full"
-                />
-                {errors.dateOfBirth && (
-                  <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth.message}</p>
-                )}
-              </div>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          size="large"
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="firstName"
+                label="First Name"
+                rules={[{ required: true, message: 'Please enter your first name' }]}
+              >
+                <Input placeholder="Enter first name" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="lastName"
+                label="Last Name"
+                rules={[{ required: true, message: 'Please enter your last name' }]}
+              >
+                <Input placeholder="Enter last name" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Gender *
-                </Label>
-                <Select onValueChange={(value) => setValue('gender', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
+          <Form.Item
+            name="phone"
+            label="Phone Number"
+            rules={[
+              { required: true, message: 'Please enter your phone number' },
+              { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
+            ]}
+          >
+                <Input
+              prefix={<PhoneOutlined />}
+              placeholder="Enter 10-digit phone number" 
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email Address"
+            rules={[
+              { required: true, message: 'Please enter your email' },
+              { type: 'email', message: 'Please enter a valid email' }
+            ]}
+          >
+                <Input
+              prefix={<MailOutlined />}
+              placeholder="Enter email address" 
+            />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="dateOfBirth"
+                label="Date of Birth"
+                rules={[{ required: true, message: 'Please select your date of birth' }]}
+              >
+                <DatePicker 
+                  style={{ width: '100%' }}
+                  placeholder="Select date of birth"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="gender"
+                label="Gender"
+                rules={[{ required: true, message: 'Please select gender' }]}
+              >
+                <Select placeholder="Select gender">
+                  <Option value="male">Male</Option>
+                  <Option value="female">Female</Option>
+                  <Option value="other">Other</Option>
                 </Select>
-                {errors.gender && (
-                  <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>
-                )}
-              </div>
+              </Form.Item>
+            </Col>
+          </Row>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Blood Group *
-                </Label>
-                <Select onValueChange={(value) => setValue('bloodGroup', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select blood group" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bloodGroups.map((group) => (
-                      <SelectItem key={group} value={group}>
-                        {group}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+          <Form.Item
+            name="bloodGroup"
+            label="Blood Group"
+            rules={[{ required: true, message: 'Please select blood group' }]}
+          >
+            <Select placeholder="Select blood group">
+              <Option value="A+">A+</Option>
+              <Option value="A-">A-</Option>
+              <Option value="B+">B+</Option>
+              <Option value="B-">B-</Option>
+              <Option value="AB+">AB+</Option>
+              <Option value="AB-">AB-</Option>
+              <Option value="O+">O+</Option>
+              <Option value="O-">O-</Option>
                 </Select>
-                {errors.bloodGroup && (
-                  <p className="text-red-500 text-sm mt-1">{errors.bloodGroup.message}</p>
-                )}
-              </div>
+          </Form.Item>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Height (cm) *
-                </Label>
-                <Input
-                  {...register("height")}
-                  type="number"
-                  placeholder="170"
-                  min="50"
-                  max="250"
-                  className="w-full"
-                />
-                {errors.height && (
-                  <p className="text-red-500 text-sm mt-1">{errors.height.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Weight (kg) *
-                </Label>
-                <Input
-                  {...register("weight")}
-                  type="number"
-                  placeholder="70"
-                  min="10"
-                  max="300"
-                  className="w-full"
-                />
-                {errors.weight && (
-                  <p className="text-red-500 text-sm mt-1">{errors.weight.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Marital Status *
-                </Label>
-                <Select onValueChange={(value) => setValue('maritalStatus', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {maritalStatuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.maritalStatus && (
-                  <p className="text-red-500 text-sm mt-1">{errors.maritalStatus.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                Address *
-              </Label>
-              <Textarea
-                {...register("address")}
-                placeholder="Enter complete address"
-                className="w-full"
-                rows={3}
-              />
-              {errors.address && (
-                <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  City *
-                </Label>
-                <Input
-                  {...register("city")}
-                  placeholder="Enter city"
-                  className="w-full"
-                />
-                {errors.city && (
-                  <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  State *
-                </Label>
-                <Input
-                  {...register("state")}
-                  placeholder="Enter state"
-                  className="w-full"
-                />
-                {errors.state && (
-                  <p className="text-red-500 text-sm mt-1">{errors.state.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Zip Code *
-                </Label>
-                <Input
-                  {...register("zipCode")}
-                  placeholder="110001"
-                  className="w-full"
-                />
-                {errors.zipCode && (
-                  <p className="text-red-500 text-sm mt-1">{errors.zipCode.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                Occupation *
-              </Label>
-              <Input
-                {...register("occupation")}
-                placeholder="Enter your occupation"
-                className="w-full"
-              />
-              {errors.occupation && (
-                <p className="text-red-500 text-sm mt-1">{errors.occupation.message}</p>
-              )}
-            </div>
-
-            {/* Emergency Contact */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Emergency Contact Name *
-                </Label>
-                <Input
-                  {...register("emergencyContactName")}
-                  placeholder="Contact person name"
-                  className="w-full"
-                />
-                {errors.emergencyContactName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.emergencyContactName.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Emergency Contact Number *
-                </Label>
-                <Input
-                  {...register("emergencyContact")}
-                  placeholder="10-digit mobile number"
-                  className="w-full"
-                />
-                {errors.emergencyContact && (
-                  <p className="text-red-500 text-sm mt-1">{errors.emergencyContact.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Relation *
-                </Label>
-                <Select onValueChange={(value) => setValue('emergencyRelation', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select relation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {relations.map((relation) => (
-                      <SelectItem key={relation} value={relation}>
-                        {relation}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.emergencyRelation && (
-                  <p className="text-red-500 text-sm mt-1">{errors.emergencyRelation.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Medical Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Medical Information</h3>
-              
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Medical History (Optional)
-                </Label>
-                <Textarea
-                  {...register("medicalHistory")}
-                  placeholder="Describe any past medical conditions, surgeries, or significant health events"
-                  className="w-full"
+          <Form.Item
+            name="medicalHistory"
+            label="Medical History"
+          >
+            <TextArea 
                   rows={3}
-                />
-              </div>
+              placeholder="Any existing medical conditions or history"
+            />
+          </Form.Item>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Known Allergies (Optional)
-                </Label>
-                <Textarea
-                  {...register("allergies")}
-                  placeholder="List any known allergies (medications, food, environmental)"
-                  className="w-full"
+          <Form.Item
+            name="allergies"
+            label="Allergies"
+          >
+            <TextArea 
                   rows={2}
-                />
-              </div>
+              placeholder="Any known allergies"
+            />
+          </Form.Item>
 
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Medications (Optional)
-                </Label>
-                <Textarea
-                  {...register("currentMedications")}
-                  placeholder="List current medications (separate with commas)"
-                  className="w-full"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Chronic Conditions (Optional)
-                </Label>
-                <Textarea
-                  {...register("chronicConditions")}
-                  placeholder="List any chronic conditions (separate with commas)"
-                  className="w-full"
-                  rows={2}
-                />
-              </div>
-            </div>
-
-            {/* Insurance Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Insurance Information (Optional)</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="block text-sm font-medium text-gray-700 mb-2">
-                    Insurance Provider
-                  </Label>
-                  <Select onValueChange={(value) => setValue('insuranceProvider', value)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {insuranceProviders.map((provider) => (
-                        <SelectItem key={provider} value={provider}>
-                          {provider}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="block text-sm font-medium text-gray-700 mb-2">
-                    Insurance Number
-                  </Label>
+          <Form.Item
+            name="emergencyContact"
+            label="Emergency Contact"
+            rules={[{ required: true, message: 'Please enter emergency contact number' }]}
+          >
                   <Input
-                    {...register("insuranceNumber")}
-                    placeholder="Enter insurance policy number"
-                    className="w-full"
-                  />
-                </div>
-              </div>
-            </div>
+              prefix={<PhoneOutlined />}
+              placeholder="Emergency contact number" 
+            />
+          </Form.Item>
 
+          <Divider />
+
+          <Form.Item>
+            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+              <Button 
+                icon={<ArrowLeftOutlined />}
+                onClick={() => setLocation('/auth/register')}
+              >
+                Back
+              </Button>
             <Button
-              type="submit"
-              disabled={registrationMutation.isPending}
-              className="w-full medical-green text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
-              {registrationMutation.isPending ? "Creating Profile..." : "Complete Registration"}
+                type="primary" 
+                htmlType="submit" 
+                loading={loading}
+                icon={<HeartOutlined />}
+                style={{ minWidth: '120px' }}
+              >
+                Register
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Text type="secondary">
+            Already have an account?{' '}
+            <Button type="link" onClick={() => setLocation('/auth/login')}>
+              Sign In
             </Button>
-          </form>
-        </CardContent>
+          </Text>
+        </div>
       </Card>
     </div>
   );

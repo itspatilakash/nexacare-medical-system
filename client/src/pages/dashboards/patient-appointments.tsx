@@ -1,21 +1,45 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import DashboardLayout from "../../components/layout/dashboard-layout";
-import AppointmentBookingModal from "../../components/modals/appointment-booking-modal";
 import { 
-  User, 
-  Calendar, 
-  FileText, 
-  ClipboardList, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle,
-  Plus,
-  Search
-} from "lucide-react";
+  Layout, 
+  Card, 
+  Row, 
+  Col, 
+  Button, 
+  Table, 
+  Tag, 
+  Space, 
+  Typography,
+  Avatar,
+  Menu,
+  Dropdown,
+  Badge,
+  Input,
+  Select,
+  Modal,
+  Statistic
+} from 'antd';
+import { 
+  UserOutlined, 
+  CalendarOutlined, 
+  MedicineBoxOutlined, 
+  FileTextOutlined,
+  BellOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../../hooks/use-auth';
+
+const { Header, Content, Sider } = Layout;
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 interface Appointment {
   id: number;
@@ -38,10 +62,12 @@ interface Appointment {
 }
 
 export default function PatientAppointments() {
+  const { user, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, upcoming, past, cancelled
+  const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Mock data for demo purposes
@@ -49,343 +75,411 @@ export default function PatientAppointments() {
     const mockAppointments = [
       {
         id: 1,
-        doctorName: "Dr. John Smith",
+        doctorName: "Dr. Sarah Johnson",
         doctorSpecialty: "Cardiology",
         hospitalName: "City General Hospital",
-        appointmentDate: "2024-09-26T10:00:00Z",
+        appointmentDate: "2024-09-28",
         appointmentTime: "10:00 AM",
-        timeSlot: "10:00-10:30",
+        timeSlot: "10:00 AM - 10:30 AM",
         reason: "Regular checkup",
         status: "confirmed",
-        type: "online",
-        priority: "normal",
-        symptoms: "None",
-        notes: "First appointment",
-        createdAt: "2024-09-25T08:00:00Z"
+        type: "Follow-up",
+        priority: "Normal",
+        symptoms: "Chest pain, shortness of breath",
+        notes: "Patient reports mild chest discomfort",
+        createdAt: "2024-09-25T10:00:00Z",
+        confirmedAt: "2024-09-25T10:30:00Z"
       },
       {
         id: 2,
-        doctorName: "Dr. Sarah Johnson",
+        doctorName: "Dr. Michael Chen",
         doctorSpecialty: "Dermatology",
-        hospitalName: "City General Hospital",
-        appointmentDate: "2024-09-27T14:00:00Z",
-        appointmentTime: "2:00 PM",
-        timeSlot: "14:00-14:30",
-        reason: "Skin consultation",
+        hospitalName: "Metro Health Center",
+        appointmentDate: "2024-09-30",
+        appointmentTime: "2:30 PM",
+        timeSlot: "2:30 PM - 3:00 PM",
+        reason: "Skin rash consultation",
         status: "pending",
-        type: "online",
-        priority: "normal",
-        symptoms: "Skin rash",
-        notes: "Follow-up from previous visit",
-        createdAt: "2024-09-24T10:00:00Z"
+        type: "New consultation",
+        priority: "Normal",
+        symptoms: "Red rash on arms",
+        notes: "Rash appeared 3 days ago",
+        createdAt: "2024-09-26T14:00:00Z"
       },
       {
         id: 3,
-        doctorName: "Dr. Michael Brown",
-        doctorSpecialty: "Orthopedics",
-        hospitalName: "City General Hospital",
-        appointmentDate: "2024-09-20T09:00:00Z",
-        appointmentTime: "9:00 AM",
-        timeSlot: "09:00-09:30",
-        reason: "Knee pain consultation",
-        status: "completed",
-        type: "online",
-        priority: "normal",
-        symptoms: "Knee pain",
-        notes: "Completed successfully",
-        createdAt: "2024-09-19T08:00:00Z",
-        completedAt: "2024-09-20T09:30:00Z"
-      },
-      {
-        id: 4,
         doctorName: "Dr. Emily Davis",
-        doctorSpecialty: "Pediatrics",
-        hospitalName: "City General Hospital",
-        appointmentDate: "2024-09-18T11:00:00Z",
+        doctorSpecialty: "Neurology",
+        hospitalName: "Central Medical Center",
+        appointmentDate: "2024-09-15",
         appointmentTime: "11:00 AM",
-        timeSlot: "11:00-11:30",
-        reason: "Child vaccination",
-        status: "cancelled",
-        type: "online",
-        priority: "normal",
-        symptoms: "None",
-        notes: "Cancelled by patient",
-        createdAt: "2024-09-17T10:00:00Z",
-        cancelledAt: "2024-09-18T08:00:00Z"
+        timeSlot: "11:00 AM - 11:30 AM",
+        reason: "Headache evaluation",
+        status: "completed",
+        type: "Follow-up",
+        priority: "High",
+        symptoms: "Severe headaches, dizziness",
+        notes: "Patient reports improvement after medication",
+        createdAt: "2024-09-10T09:00:00Z",
+        confirmedAt: "2024-09-10T09:15:00Z",
+        completedAt: "2024-09-15T11:30:00Z"
       }
     ];
-
-    // Simulate API call
-    setTimeout(() => {
-      setAppointments(mockAppointments);
-      setLoading(false);
-    }, 1000);
+    
+    setAppointments(mockAppointments);
+    setLoading(false);
   }, []);
 
-  const navigationItems = [
-    {
-      label: "Dashboard",
-      path: "/dashboard/patient",
-      icon: <User className="w-5 h-5" />,
-    },
-    {
-      label: "Appointments",
-      path: "/dashboard/patient/appointments",
-      icon: <Calendar className="w-5 h-5" />,
-      isActive: true,
-    },
-    {
-      label: "Medical Records",
-      path: "/dashboard/patient/medical-records",
-      icon: <FileText className="w-5 h-5" />,
-    },
-    {
-      label: "Lab Reports",
-      path: "/dashboard/patient/lab-reports",
-      icon: <ClipboardList className="w-5 h-5" />,
-    },
-    {
-      label: "Profile",
-      path: "/dashboard/patient/profile",
-      icon: <User className="w-5 h-5" />,
-    },
-  ];
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'pending':
-        return <Clock className="w-5 h-5 text-yellow-500" />;
-      case 'completed':
-        return <CheckCircle className="w-5 h-5 text-blue-500" />;
-      case 'cancelled':
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      confirmed: "bg-green-100 text-green-800",
-      pending: "bg-yellow-100 text-yellow-800",
-      completed: "bg-blue-100 text-blue-800",
-      cancelled: "bg-red-100 text-red-800"
-    };
-    
-    return (
-      <Badge className={`${variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
-
-  const filteredAppointments = appointments.filter((appointment: any) => {
+  const filteredAppointments = appointments.filter(appointment => {
     const matchesFilter = filter === 'all' || appointment.status === filter;
-    const matchesSearch = appointment.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.reason.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = searchTerm === '' || 
+      appointment.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.hospitalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.reason.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const headerActions = (
-    <Button 
-      className="medical-blue text-white hover:bg-blue-700"
-      onClick={() => setIsBookingModalOpen(true)}
-    >
-      <Plus className="w-4 h-4 mr-2" />
-      Book Appointment
-    </Button>
-  );
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'green';
+      case 'pending': return 'orange';
+      case 'completed': return 'blue';
+      case 'cancelled': return 'red';
+      default: return 'default';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'High': return 'red';
+      case 'Medium': return 'orange';
+      case 'Normal': return 'green';
+      default: return 'default';
+    }
+  };
+
+  const columns = [
+    {
+      title: 'Doctor',
+      dataIndex: 'doctorName',
+      key: 'doctorName',
+      render: (text: string, record: Appointment) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{text}</Text>
+          <Text type="secondary" style={{ fontSize: '12px' }}>
+            {record.doctorSpecialty}
+          </Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Hospital',
+      dataIndex: 'hospitalName',
+      key: 'hospitalName',
+    },
+    {
+      title: 'Date & Time',
+      key: 'datetime',
+      render: (record: Appointment) => (
+        <Space direction="vertical" size={0}>
+          <Text>{record.appointmentDate}</Text>
+          <Text type="secondary">{record.appointmentTime}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Reason',
+      dataIndex: 'reason',
+      key: 'reason',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={getStatusColor(status)}>
+          {status.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Priority',
+      dataIndex: 'priority',
+      key: 'priority',
+      render: (priority: string) => (
+        <Tag color={getPriorityColor(priority)}>
+          {priority}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (record: Appointment) => (
+        <Space>
+          <Button size="small" icon={<EyeOutlined />}>
+            View
+          </Button>
+          {record.status === 'pending' && (
+            <Button size="small" icon={<EditOutlined />}>
+              Edit
+            </Button>
+          )}
+          {record.status === 'pending' && (
+            <Button size="small" danger icon={<DeleteOutlined />}>
+              Cancel
+            </Button>
+          )}
+        </Space>
+      ),
+    },
+  ];
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: logout,
+    },
+  ];
+
+  const sidebarMenu = [
+    {
+      key: 'dashboard',
+      icon: <UserOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: 'appointments',
+      icon: <CalendarOutlined />,
+      label: 'Appointments',
+    },
+    {
+      key: 'prescriptions',
+      icon: <MedicineBoxOutlined />,
+      label: 'Prescriptions',
+    },
+    {
+      key: 'reports',
+      icon: <FileTextOutlined />,
+      label: 'Lab Reports',
+    },
+  ];
+
+  const stats = {
+    total: appointments.length,
+    upcoming: appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length,
+    completed: appointments.filter(a => a.status === 'completed').length,
+    cancelled: appointments.filter(a => a.status === 'cancelled').length,
+  };
 
   return (
-    <DashboardLayout
-      title="My Appointments"
-      subtitle="Manage your medical appointments"
-      icon={<Calendar className="w-6 h-6 text-white" />}
-      navigationItems={navigationItems}
-      headerActions={headerActions}
-    >
-      {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          background: '#fff',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
+        }}
+      >
+        <div style={{ 
+          padding: '16px', 
+          textAlign: 'center',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <MedicineBoxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          {!collapsed && (
+            <Title level={4} style={{ margin: '8px 0 0 0', color: '#1890ff' }}>
+              NexaCare
+            </Title>
+          )}
+        </div>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['appointments']}
+          items={sidebarMenu}
+          style={{ border: 'none' }}
+        />
+      </Sider>
+
+      <Layout>
+        <Header style={{ 
+          background: '#fff', 
+          padding: '0 24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Button
+            type="text"
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: '16px' }}
+          >
+            {collapsed ? '☰' : '✕'}
+          </Button>
+          
+          <Space>
+            <Badge count={3} size="small">
+              <BellOutlined style={{ fontSize: '18px' }} />
+            </Badge>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<UserOutlined />} />
+                <Text strong>{user?.fullName}</Text>
+              </Space>
+            </Dropdown>
+          </Space>
+        </Header>
+
+        <Content style={{ padding: '24px', background: '#f5f5f5' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <Title level={2} style={{ margin: 0 }}>
+              My Appointments
+            </Title>
+            <Text type="secondary">
+              Manage your medical appointments
+            </Text>
+          </div>
+
+          {/* Statistics */}
+          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Total Appointments"
+                  value={stats.total}
+                  prefix={<CalendarOutlined />}
+                  valueStyle={{ color: '#1890ff' }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Upcoming"
+                  value={stats.upcoming}
+                  prefix={<ClockCircleOutlined />}
+                  valueStyle={{ color: '#52c41a' }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Completed"
+                  value={stats.completed}
+                  prefix={<CheckCircleOutlined />}
+                  valueStyle={{ color: '#faad14' }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Cancelled"
+                  value={stats.cancelled}
+                  prefix={<DeleteOutlined />}
+                  valueStyle={{ color: '#ff4d4f' }}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Filters and Search */}
+          <Card style={{ marginBottom: '24px' }}>
+            <Row gutter={[16, 16]} align="middle">
+              <Col xs={24} sm={12} md={8}>
+                <Input
                   placeholder="Search appointments..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  prefix={<SearchOutlined />}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+              </Col>
+              <Col xs={24} sm={12} md={8}>
+                <Select
+                  value={filter}
+                  onChange={setFilter}
+                  style={{ width: '100%' }}
+                  suffixIcon={<FilterOutlined />}
+                >
+                  <Option value="all">All Appointments</Option>
+                  <Option value="confirmed">Confirmed</Option>
+                  <Option value="pending">Pending</Option>
+                  <Option value="completed">Completed</Option>
+                  <Option value="cancelled">Cancelled</Option>
+                </Select>
+              </Col>
+              <Col xs={24} sm={24} md={8}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setIsBookingModalOpen(true)}
+                  style={{ width: '100%' }}
+                >
+                  Book New Appointment
+                </Button>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* Appointments Table */}
+          <Card title="Appointments">
+            <Table
+              columns={columns}
+              dataSource={filteredAppointments}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => 
+                  `${range[0]}-${range[1]} of ${total} appointments`,
+              }}
+            />
+          </Card>
+
+          {/* Booking Modal */}
+          <Modal
+            title="Book New Appointment"
+            open={isBookingModalOpen}
+            onCancel={() => setIsBookingModalOpen(false)}
+            footer={null}
+            width={600}
+          >
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <CalendarOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
+              <Title level={3}>Appointment Booking</Title>
+              <Text type="secondary">
+                This feature will be implemented in the next phase
+              </Text>
+              <div style={{ marginTop: '24px' }}>
+                <Button type="primary" onClick={() => setIsBookingModalOpen(false)}>
+                  Close
+                </Button>
               </div>
             </div>
-            
-            {/* Filter */}
-            <div className="flex gap-2">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('all')}
-              >
-                All
-              </Button>
-              <Button
-                variant={filter === 'upcoming' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('upcoming')}
-              >
-                Upcoming
-              </Button>
-              <Button
-                variant={filter === 'completed' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('completed')}
-              >
-                Completed
-              </Button>
-              <Button
-                variant={filter === 'cancelled' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('cancelled')}
-              >
-                Cancelled
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Appointments List */}
-      {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                  <div className="w-20 h-6 bg-gray-200 rounded"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : filteredAppointments.length > 0 ? (
-        <div className="space-y-4">
-          {filteredAppointments.map((appointment: any) => (
-            <Card key={appointment.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 medical-blue rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-lg">
-                        {appointment.doctorName?.charAt(0) || "D"}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {appointment.doctorName}
-                        </h3>
-                        {getStatusIcon(appointment.status)}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        {appointment.doctorSpecialty} • {appointment.hospitalName}
-                      </p>
-                      <p className="text-sm text-gray-500 mb-2">
-                        {appointment.reason}
-                      </p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(appointment.appointmentDate).toLocaleDateString()}
-                        </span>
-                        <span className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {appointment.appointmentTime}
-                        </span>
-                        <span className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-                          {appointment.type}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-end space-y-2">
-                    {getStatusBadge(appointment.status)}
-                    <div className="flex space-x-2">
-                      {appointment.status === 'pending' && (
-                        <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                          Cancel
-                        </Button>
-                      )}
-                      {appointment.status === 'confirmed' && (
-                        <Button size="sm" variant="outline" className="text-blue-600 hover:text-blue-700">
-                          Join Call
-                        </Button>
-                      )}
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                {appointment.symptoms && (
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Symptoms:</span> {appointment.symptoms}
-                    </p>
-                  </div>
-                )}
-                
-                {appointment.notes && (
-                  <div className="mt-2 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Notes:</span> {appointment.notes}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No appointments found
-            </h3>
-            <p className="text-gray-500 mb-6">
-              {searchTerm || filter !== 'all' 
-                ? 'Try adjusting your search or filter criteria'
-                : 'You haven\'t booked any appointments yet'
-              }
-            </p>
-            <Button 
-              className="medical-blue text-white hover:bg-blue-700"
-              onClick={() => setIsBookingModalOpen(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Book Your First Appointment
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <AppointmentBookingModal 
-        isOpen={isBookingModalOpen} 
-        onClose={() => setIsBookingModalOpen(false)} 
-      />
-    </DashboardLayout>
+          </Modal>
+        </Content>
+      </Layout>
+    </Layout>
   );
 }

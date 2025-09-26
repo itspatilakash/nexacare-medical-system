@@ -1,134 +1,321 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import DashboardLayout from "../../components/layout/dashboard-layout";
-import PrescriptionList from "../../components/prescription-list";
-import PrescriptionModal from "../../components/modals/prescription-modal";
-import { FileText, Plus, Download, Upload } from "lucide-react";
+import { 
+  Layout, 
+  Card, 
+  Row, 
+  Col, 
+  Statistic, 
+  Button, 
+  Tag, 
+  Space, 
+  Typography,
+  Avatar,
+  Menu,
+  Dropdown,
+  Badge,
+  List,
+  Modal,
+  Form,
+  Input,
+  Select
+} from 'antd';
+import { 
+  UserOutlined, 
+  MedicineBoxOutlined, 
+  FileTextOutlined,
+  BellOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  CheckCircleOutlined,
+  DownloadOutlined,
+  UploadOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../../hooks/use-auth';
+
+const { Header, Content, Sider } = Layout;
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 export default function DoctorPrescriptionsPage() {
+  const { user, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
 
-  const navigationItems = [
+  const userMenuItems = [
     {
-      label: "Dashboard",
-      path: "/dashboard/doctor",
-      icon: <FileText className="w-5 h-5" />,
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
     },
     {
-      label: "Prescriptions",
-      path: "/dashboard/doctor/prescriptions",
-      icon: <FileText className="w-5 h-5" />,
-      isActive: true,
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: logout,
     },
   ];
 
-  const headerActions = (
-    <div className="flex items-center gap-3">
-      <Button variant="outline" className="flex items-center gap-2">
-        <Download className="w-4 h-4" />
-        Export
-      </Button>
-      <Button variant="outline" className="flex items-center gap-2">
-        <Upload className="w-4 h-4" />
-        Import
-      </Button>
-      <Button 
-        className="medical-blue text-white hover:bg-blue-700 flex items-center gap-2"
-        onClick={() => setIsPrescriptionModalOpen(true)}
-      >
-        <Plus className="w-4 h-4" />
-        New Prescription
-      </Button>
-    </div>
-  );
+  const sidebarMenu = [
+    {
+      key: 'dashboard',
+      icon: <UserOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: 'prescriptions',
+      icon: <FileTextOutlined />,
+      label: 'Prescriptions',
+    },
+  ];
+
+  // Mock prescription data
+  const prescriptions = [
+    {
+      id: 1,
+      patientName: "Jane Doe",
+      date: "2024-09-26",
+      medications: [
+        { name: "Paracetamol", dosage: "500mg", frequency: "3 times daily" },
+        { name: "Amoxicillin", dosage: "250mg", frequency: "2 times daily" }
+      ],
+      status: "active"
+    },
+    {
+      id: 2,
+      patientName: "John Smith",
+      date: "2024-09-25",
+      medications: [
+        { name: "Ibuprofen", dosage: "400mg", frequency: "2 times daily" }
+      ],
+      status: "completed"
+    }
+  ];
 
   return (
-    <DashboardLayout
-      title="Prescriptions"
-      subtitle="Manage patient prescriptions"
-      icon={<FileText className="w-6 h-6 text-white" />}
-      navigationItems={navigationItems}
-      headerActions={headerActions}
-    >
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-blue rounded-lg p-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Total Prescriptions</p>
-                <p className="text-2xl font-semibold text-gray-900">24</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="medical-green rounded-lg p-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Active</p>
-                <p className="text-2xl font-semibold text-gray-900">18</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-yellow-500 rounded-lg p-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">Follow-up Due</p>
-                <p className="text-2xl font-semibold text-gray-900">3</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-500 rounded-lg p-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-medical-gray">This Month</p>
-                <p className="text-2xl font-semibold text-gray-900">8</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Prescriptions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Prescriptions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PrescriptionList 
-            role="doctor" 
-            showActions={true} 
-            showFilters={true}
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          background: '#fff',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
+        }}
+      >
+        <div style={{ 
+          padding: '16px', 
+          textAlign: 'center',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <MedicineBoxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          {!collapsed && (
+            <Title level={4} style={{ margin: '8px 0 0 0', color: '#1890ff' }}>
+              NexaCare
+            </Title>
+          )}
+        </div>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['prescriptions']}
+          style={{ borderRight: 0 }}
+          items={sidebarMenu}
+        />
+      </Sider>
+      
+      <Layout>
+        <Header style={{ 
+          padding: '0 24px', 
+          background: '#fff', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+        }}>
+          <Button
+            type="text"
+            icon={collapsed ? <PlusOutlined /> : <PlusOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: '16px', width: 64, height: 64 }}
           />
-        </CardContent>
-      </Card>
+          <Space>
+            <Badge count={5} size="small">
+              <BellOutlined style={{ fontSize: '18px' }} />
+            </Badge>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<UserOutlined />} />
+                <Text strong>{user?.fullName}</Text>
+              </Space>
+            </Dropdown>
+          </Space>
+        </Header>
+        
+        <Content style={{ margin: '24px', background: '#f5f5f5', minHeight: 'calc(100vh - 112px)' }}>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <Title level={2} style={{ margin: '0 0 8px 0', color: '#1890ff' }}>
+                  <FileTextOutlined style={{ marginRight: '8px' }} />
+                  Prescriptions
+                </Title>
+                <Text type="secondary">Manage patient prescriptions</Text>
+              </div>
+              <Space>
+                <Button icon={<DownloadOutlined />}>
+                  Export
+                </Button>
+                <Button icon={<UploadOutlined />}>
+                  Import
+                </Button>
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />}
+                  onClick={() => setIsPrescriptionModalOpen(true)}
+                >
+                  New Prescription
+                </Button>
+              </Space>
+            </div>
+          </div>
 
-      {/* Prescription Modal */}
-      <PrescriptionModal
-        isOpen={isPrescriptionModalOpen}
-        onClose={() => setIsPrescriptionModalOpen(false)}
-      />
-    </DashboardLayout>
+          {/* Quick Stats */}
+          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Total Prescriptions"
+                  value={156}
+                  prefix={<FileTextOutlined style={{ color: '#1890ff' }} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="This Month"
+                  value={42}
+                  prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Pending"
+                  value={8}
+                  prefix={<FileTextOutlined style={{ color: '#faad14' }} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Card>
+                <Statistic
+                  title="Today"
+                  value={12}
+                  prefix={<FileTextOutlined style={{ color: '#722ed1' }} />}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Prescriptions List */}
+          <Card title="Prescription Management">
+            <div>
+              {prescriptions.map((prescription) => (
+                <Card 
+                  key={prescription.id} 
+                  style={{ marginBottom: '16px' }}
+                  title={
+                    <Space>
+                      <FileTextOutlined />
+                      Prescription #{prescription.id}
+                    </Space>
+                  }
+                  extra={
+                    <Space>
+                      <Tag color={prescription.status === 'active' ? 'green' : 'blue'}>
+                        {prescription.status}
+                      </Tag>
+                      <Button type="primary" icon={<DownloadOutlined />}>
+                        Download
+                      </Button>
+                    </Space>
+                  }
+                >
+                  <Row gutter={[16, 16]}>
+                    <Col span={8}>
+                      <Text strong>Patient: </Text>
+                      <Text>{prescription.patientName}</Text>
+                    </Col>
+                    <Col span={8}>
+                      <Text strong>Date: </Text>
+                      <Text>{prescription.date}</Text>
+                    </Col>
+                    <Col span={8}>
+                      <Text strong>Medications: </Text>
+                      <Text>{prescription.medications.length}</Text>
+                    </Col>
+                  </Row>
+                  
+                  <div style={{ marginTop: '16px' }}>
+                    <Title level={5}>Medications:</Title>
+                    <List
+                      dataSource={prescription.medications}
+                      renderItem={(medication) => (
+                        <List.Item>
+                          <List.Item.Meta
+                            title={medication.name}
+                            description={`${medication.dosage} - ${medication.frequency}`}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+
+          {/* Prescription Modal */}
+          <Modal
+            title="Create New Prescription"
+            open={isPrescriptionModalOpen}
+            onCancel={() => setIsPrescriptionModalOpen(false)}
+            footer={null}
+            width={600}
+          >
+            <Form layout="vertical">
+              <Form.Item label="Patient" required>
+                <Select placeholder="Select patient">
+                  <Option value="jane">Jane Doe</Option>
+                  <Option value="john">John Smith</Option>
+                </Select>
+              </Form.Item>
+              <Form.Item label="Medications" required>
+                <Input.TextArea placeholder="Enter medications and dosages" rows={4} />
+              </Form.Item>
+              <Form.Item label="Instructions">
+                <Input.TextArea placeholder="Special instructions" rows={3} />
+              </Form.Item>
+              <Form.Item>
+                <Space>
+                  <Button type="primary">Save Prescription</Button>
+                  <Button onClick={() => setIsPrescriptionModalOpen(false)}>Cancel</Button>
+                </Space>
+              </Form.Item>
+            </Form>
+          </Modal>
+        </Content>
+      </Layout>
+    </Layout>
   );
-} 
+}
