@@ -9,19 +9,19 @@ import { User, Calendar, FileText, ClipboardList, MessageCircle } from "lucide-r
 export default function PatientDashboard() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+  // Get dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
-    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
   });
 
+  // Get user appointments
   const { data: appointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ['/api/appointments/my'],
-    queryFn: () => fetch('/api/appointments/my').then(res => res.json()),
   });
 
+  // Get lab reports
   const { data: labReports, isLoading: labReportsLoading } = useQuery({
     queryKey: ['/api/lab-reports/my'],
-    queryFn: () => fetch('/api/lab-reports/my').then(res => res.json()),
   });
 
   const navigationItems = [

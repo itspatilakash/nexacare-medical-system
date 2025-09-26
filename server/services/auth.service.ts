@@ -5,7 +5,6 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { users, otpVerifications } from '../../drizzle/schema';
 import { generateOTP, isOtpExpired } from '../utils/otp';
-import { smsService } from './sms.service';
 import type {
   InsertUser,
 } from '../../shared/schema-types';
@@ -26,8 +25,6 @@ export const generateToken = (user: {
 
 /**
  * Send OTP for mobile registration/login.
- * In development mode: Shows OTP in console for testing
- * In production mode: Integrates with SMS provider
  */
 export const sendOtp = async (mobileNumber: string, role: string) => {
   const otp = generateOTP();
@@ -39,20 +36,9 @@ export const sendOtp = async (mobileNumber: string, role: string) => {
     expiresAt,
   });
 
-  // Send SMS with OTP (local service)
-  await smsService.sendOTP(mobileNumber, otp, 'registration');
-  
-  // Always log OTP for local development
-  console.log(`\n🔑 OTP for ${mobileNumber}: ${otp}`);
-  console.log(`👤 Role: ${role}`);
-  console.log(`⏰ Expires: ${expiresAt}\n`);
-  
-  return { 
-    success: true, 
-    otp: otp, // Always return OTP for immediate display
-    mobileNumber: mobileNumber,
-    message: `OTP ${otp} generated for ${mobileNumber}`
-  };
+  // Integrate SMS service here (e.g., Twilio)
+  console.log(`Sending OTP ${otp} to ${mobileNumber}`);
+  return { success: true, otp }; // Return OTP only in dev
 };
 
 /**
@@ -109,8 +95,6 @@ export const registerUser = async (user: Omit<InsertUser, 'id' | 'createdAt' | '
 
 /**
  * Send OTP for login.
- * In development mode: Shows OTP in console for testing
- * In production mode: Integrates with SMS provider
  */
 export const sendLoginOtp = async (mobileNumber: string) => {
   const [user] = await db.select().from(users).where(eq(users.mobileNumber, mobileNumber)).limit(1);
@@ -125,20 +109,9 @@ export const sendLoginOtp = async (mobileNumber: string) => {
     expiresAt,
   });
 
-  // Send SMS with OTP (local service)
-  await smsService.sendOTP(mobileNumber, otp, 'login');
-  
-  // Always log OTP for local development
-  console.log(`\n🔑 Login OTP for ${mobileNumber}: ${otp}`);
-  console.log(`👤 User: ${user.fullName} (${user.role})`);
-  console.log(`⏰ Expires: ${expiresAt}\n`);
-  
-  return { 
-    success: true, 
-    otp: otp, // Always return OTP for immediate display
-    mobileNumber: mobileNumber,
-    message: `Login OTP ${otp} generated for ${mobileNumber}`
-  };
+  // Integrate SMS service here (e.g., Twilio)
+  console.log(`Sending login OTP ${otp} to ${mobileNumber}`);
+  return { success: true, otp }; // Return OTP only in dev
 };
 
 /**

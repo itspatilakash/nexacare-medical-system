@@ -39,7 +39,10 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
     customLogger: {
       ...viteLogger,
-      error: (msg, options) => viteLogger.error(msg, options),
+      error: (msg, options) => {
+        console.error('Vite Error:', msg);
+        viteLogger.error(msg, options);
+      },
     },
   });
 
@@ -53,6 +56,7 @@ export async function setupVite(app: Express, server: Server) {
       const html = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e) {
+      console.error('Vite transform error:', e);
       vite.ssrFixStacktrace(e as Error);
       next(e);
     }

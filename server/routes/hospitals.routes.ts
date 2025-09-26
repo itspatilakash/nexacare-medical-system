@@ -32,6 +32,18 @@ router.post('/', async (req, res) => {
   }
 });
 
+// POST /hospitals/register - Alternative registration endpoint
+router.post('/register', async (req, res) => {
+  try {
+    const data = insertHospitalSchema.parse(req.body);
+    const hospital = await createHospital(data);
+    res.status(201).json({ hospital });
+  } catch (err) {
+    console.error('Register hospital error:', err);
+    res.status(400).json({ message: 'Invalid data', error: err });
+  }
+});
+
 router.post(
   '/approve/doctor/:id',
   authenticateToken,

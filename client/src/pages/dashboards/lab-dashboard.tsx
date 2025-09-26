@@ -8,12 +8,10 @@ import { FlaskConical, ClipboardList, User, FileText, Upload, Settings } from "l
 export default function LabDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
-    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
   });
 
   const { data: labReports, isLoading: reportsLoading } = useQuery({
     queryKey: ['/api/lab-reports/my'],
-    queryFn: () => fetch('/api/lab-reports/my').then(res => res.json()),
   });
 
   const navigationItems = [

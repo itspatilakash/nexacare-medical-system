@@ -1,19 +1,45 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
-import * as dotenv from "dotenv";
+// server/db.ts - Mock database for demo purposes
 import * as schema from "../shared/schema";
 
-// Load environment variables
-dotenv.config();
+// Mock database implementation for demo
+export const db = {
+  insert: (table: any) => ({
+    values: (data: any) => ({
+      returning: () => {
+        console.log(`📝 Mock DB: Inserted into ${table}`, data);
+        return [{ id: Math.random(), ...data, createdAt: new Date() }];
+      }
+    })
+  }),
+  
+  select: () => ({
+    from: (table: any) => ({
+      where: (condition: any) => ({
+        limit: (count: number) => {
+          console.log(`📝 Mock DB: Selected from ${table}`, { condition, limit: count });
+          return [];
+        },
+        orderBy: (field: any) => ({
+          limit: (count: number) => {
+            console.log(`📝 Mock DB: Selected from ${table}`, { condition, orderBy: field, limit: count });
+            return [];
+          }
+        })
+      })
+    })
+  }),
+  
+  update: (table: any) => ({
+    set: (data: any) => ({
+      where: (condition: any) => ({
+        returning: () => {
+          console.log(`📝 Mock DB: Updated ${table}`, { data, condition });
+          return [];
+        }
+      })
+    })
+  })
+};
 
-neonConfig.webSocketConstructor = ws;
-
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
-
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+console.log('🗄️  Using mock database for demo purposes');
+console.log('📝 All data operations are logged to console');

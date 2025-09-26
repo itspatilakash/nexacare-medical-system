@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
-import router from "./routes";
+import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 
 const app = express();
@@ -10,8 +10,8 @@ const server = createServer(app);
 app.use(cors());
 app.use(express.json());
 
-// API routes first
-app.use("/api", router);
+// Register API routes
+registerRoutes(app);
 
 const start = async () => {
   if (process.env.NODE_ENV === "production") {

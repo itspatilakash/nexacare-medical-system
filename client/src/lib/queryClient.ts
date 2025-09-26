@@ -1,8 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getAuthToken } from "./auth";
 
-// API base URL - adjust this to match your server port
-const API_BASE_URL = 'http://localhost:5173';
+// API base URL - use relative URLs to go through Vite proxy
+const API_BASE_URL = '';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

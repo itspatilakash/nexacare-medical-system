@@ -61,22 +61,19 @@ export default function AppointmentBookingModal({
 
   // Get doctors by selected hospital
   const { data: doctors, isLoading: doctorsLoading } = useQuery({
-    queryKey: ['/api/doctors/by-hospital', selectedHospital?.id],
+    queryKey: [`/api/doctors/by-hospital/${selectedHospital?.id}`],
     enabled: !!selectedHospital && isOpen,
   });
 
   // Get available slots for selected doctor and date
   const { data: doctorAvailability, isLoading: slotsLoading } = useQuery({
-    queryKey: ['/api/doctors/availability', selectedDoctor?.id, selectedDate],
+    queryKey: [`/api/doctors/availability/${selectedDoctor?.id}/${selectedDate}`],
     enabled: !!selectedDoctor && !!selectedDate && isOpen,
   });
 
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointmentData: any) => {
-      const response = await apiRequest('/api/appointments', {
-        method: 'POST',
-        body: JSON.stringify(appointmentData),
-      });
+      const response = await apiRequest('POST', '/api/appointments', appointmentData);
       return response;
     },
     onSuccess: () => {

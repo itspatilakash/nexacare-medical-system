@@ -2,6 +2,7 @@
 import { Express, Router } from "express";
 
 import authRoutes from "./auth.routes";
+import testRoutes from "./test.routes";
 import usersRoutes from "./users.routes";
 import hospitalsRoutes from "./hospitals.routes";
 import doctorsRoutes from "./doctors.routes";
@@ -22,6 +23,7 @@ router.get("/health", (_, res) => {
 export default router;
 
 export async function registerRoutes(app: Express) {
+  app.use("/api/test", testRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
   app.use("/api/hospitals", hospitalsRoutes);
@@ -31,6 +33,147 @@ export async function registerRoutes(app: Express) {
   app.use("/api/reception", receptionRoutes);
   app.use("/api/appointments", appointmentsRoutes);
   app.use("/api/doctors/availability", availabilityRoutes);
-  app.use("/api/prescriptions", prescriptionsRoutes); 
+  
+  // Add missing endpoints that frontend expects - MUST be before specific route handlers
+  app.get("/api/prescriptions/my", async (req, res) => {
+    try {
+      // Return mock prescriptions for demo
+      const mockPrescriptions = [
+        {
+          id: 1,
+          diagnosis: "Hypertension",
+          medications: "Lisinopril 10mg daily",
+          instructions: "Take with food",
+          createdAt: "2024-09-20T10:00:00Z",
+          doctorName: "Dr. John Smith"
+        }
+      ];
+      res.json(mockPrescriptions);
+    } catch (error) {
+      console.error('My prescriptions error:', error);
+      res.status(500).json({ message: 'Failed to fetch prescriptions' });
+    }
+  });
+  
+  app.use("/api/prescriptions", prescriptionsRoutes);
+  app.get("/api/dashboard/stats", async (req, res) => {
+    try {
+      // Mock stats for now - can be enhanced with real data later
+      res.json({
+        totalAppointments: 12,
+        upcomingAppointments: 3,
+        completedAppointments: 9,
+        pendingPrescriptions: 2,
+        activePrescriptions: 5,
+        labReports: 8
+      });
+    } catch (error) {
+      console.error('Dashboard stats error:', error);
+      res.status(500).json({ message: 'Failed to fetch dashboard stats' });
+    }
+  });
+  
+  
+  app.get("/api/lab-reports/my", async (req, res) => {
+    try {
+      // Return mock lab reports for demo
+      const mockReports = [
+        {
+          id: 1,
+          testName: "Blood Test",
+          testType: "Complete Blood Count",
+          reportDate: "2024-09-20T10:00:00Z",
+          status: "completed",
+          result: "Normal"
+        }
+      ];
+      res.json(mockReports);
+    } catch (error) {
+      console.error('My lab reports error:', error);
+      res.status(500).json({ message: 'Failed to fetch lab reports' });
+    }
+  });
+  
+  app.get("/api/hospitals/list", async (req, res) => {
+    try {
+      // Mock hospitals data for demo
+      const mockHospitals = [
+        {
+          id: 1,
+          name: "City General Hospital",
+          address: "123 Main Street",
+          city: "New York",
+          state: "NY",
+          zipCode: "10001",
+          totalBeds: 200,
+          emergencyServices: true,
+          isActive: true
+        },
+        {
+          id: 2,
+          name: "Metro Medical Center",
+          address: "456 Health Avenue",
+          city: "New York",
+          state: "NY",
+          zipCode: "10002",
+          totalBeds: 150,
+          emergencyServices: true,
+          isActive: true
+        }
+      ];
+      res.json(mockHospitals);
+    } catch (error) {
+      console.error('Hospitals list error:', error);
+      res.status(500).json({ message: 'Failed to fetch hospitals' });
+    }
+  });
+  
+  app.get("/api/doctors/by-hospital/:id", async (req, res) => {
+    try {
+      // Mock doctors data for demo
+      const mockDoctors = [
+        {
+          id: 1,
+          fullName: "Dr. John Smith",
+          specialty: "Cardiology",
+          experience: 10,
+          consultationFee: "150.00",
+          status: "in",
+          isAvailable: true
+        },
+        {
+          id: 2,
+          fullName: "Dr. Sarah Johnson",
+          specialty: "Dermatology",
+          experience: 8,
+          consultationFee: "120.00",
+          status: "in",
+          isAvailable: true
+        }
+      ];
+      res.json(mockDoctors);
+    } catch (error) {
+      console.error('Doctors by hospital error:', error);
+      res.status(500).json({ message: 'Failed to fetch doctors' });
+    }
+  });
+  
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      // Mock user data for demo
+      res.json({
+        user: {
+          id: 1,
+          mobileNumber: "9876543211",
+          fullName: "Demo User",
+          role: "patient"
+        }
+      });
+    } catch (error) {
+      console.error('Auth me error:', error);
+      res.status(500).json({ message: 'Failed to fetch user profile' });
+    }
+  });
+  
   return app;
 }

@@ -7,12 +7,10 @@ import { Building2, UserRound, User, Calendar, FileText, Settings } from "lucide
 export default function HospitalDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
-    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
   });
 
   const { data: appointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ['/api/appointments/my'],
-    queryFn: () => fetch('/api/appointments/my').then(res => res.json()),
   });
 
   const navigationItems = [

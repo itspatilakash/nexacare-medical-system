@@ -9,6 +9,18 @@ import { insertPatientSchema } from "../../shared/schema";
 
 const router = Router();
 
+// POST /patients/register
+router.post("/register", async (req, res) => {
+  try {
+    const validatedData = insertPatientSchema.parse(req.body);
+    const patient = await patientsService.createPatient(validatedData);
+    res.status(201).json(patient);
+  } catch (err) {
+    console.error("Patient registration error:", err);
+    res.status(400).json({ message: "Registration failed", error: err });
+  }
+});
+
 // POST /patients/appointments
 router.post(
   "/appointments",

@@ -5,15 +5,14 @@ import DashboardLayout from "../../components/layout/dashboard-layout";
 import { UserRound, Calendar, User, FileText, ClipboardList } from "lucide-react";
 
 export default function DoctorDashboard() {
+  // Get dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
-  queryKey: ['/api/dashboard/stats'],
-  queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
-});
+    queryKey: ['/api/dashboard/stats'],
+  });
 
+  // Get doctor appointments
   const { data: todayAppointments, isLoading: appointmentsLoading } = useQuery({
-    queryKey: ['/api/appointments/today'],
-    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
-
+    queryKey: ['/api/appointments/my'],
   });
 
   const navigationItems = [

@@ -5,7 +5,7 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: '../dist/client', // Build to dist/client in root
+    outDir: '../dist/client',
     emptyOutDir: true,
   },
   css: {

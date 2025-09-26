@@ -19,18 +19,33 @@ export interface UserProfile {
 }
 
 export const authApi = {
+  sendOtp: async (data: { mobileNumber: string; role: string }) => {
+    const response = await apiRequest('POST', '/api/auth/otp/send', data);
+    return response.json();
+  },
+
   register: async (data: { mobileNumber: string; fullName: string; role: string }) => {
     const response = await apiRequest('POST', '/api/auth/register', data);
     return response.json();
   },
 
   verifyOtp: async (data: { mobileNumber: string; otp: string; password: string; role: string; fullName: string }) => {
-    const response = await apiRequest('POST', '/api/auth/verify-otp', data);
+    const response = await apiRequest('POST', '/api/auth/otp/verify', data);
     return response.json();
   },
 
   login: async (data: { mobileNumber: string; password: string }) => {
     const response = await apiRequest('POST', '/api/auth/login', data);
+    return response.json();
+  },
+
+  sendLoginOtp: async (data: { mobileNumber: string }) => {
+    const response = await apiRequest('POST', '/api/auth/login/otp/send', data);
+    return response.json();
+  },
+
+  loginWithOtp: async (data: { mobileNumber: string; otp: string }) => {
+    const response = await apiRequest('POST', '/api/auth/login/otp/verify', data);
     return response.json();
   },
 
@@ -51,6 +66,8 @@ export const getAuthToken = () => {
 
 export const setAuthToken = (token: string) => {
   localStorage.setItem('auth-token', token);
+  // Dispatch custom event to notify auth context
+  window.dispatchEvent(new CustomEvent('tokenChanged'));
 };
 
 export const isAuthenticated = () => {
@@ -67,8 +84,11 @@ export const decodeToken = (token: string): User | null => {
         .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
-    return JSON.parse(jsonPayload);
+    const decoded = JSON.parse(jsonPayload);
+    console.log('🔍 Decoded token:', decoded);
+    return decoded;
   } catch (error) {
+    console.error('❌ Token decode error:', error);
     return null;
   }
 };

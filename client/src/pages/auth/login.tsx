@@ -17,19 +17,21 @@ export default function Login() {
     otp: "",
   });
   const [otpSent, setOtpSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: (data) => {
+      console.log('🔍 Login success - data:', data);
       setAuthToken(data.token);
+      console.log('🔍 Token set, navigating to dashboard');
       toast({
         title: "Login successful",
         description: `Welcome back, ${data.user.fullName}!`,
       });
       setLocation("/dashboard");
-      window.location.reload();
     },
     onError: (error) => {
       toast({
@@ -42,49 +44,57 @@ export default function Login() {
 
   const sendOtpMutation = useMutation({
     mutationFn: async (mobileNumber: string) => {
-      const response = await fetch('/api/auth/login/otp/send', {
+      const response = await fetch('/api/auth/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobileNumber }),
+        body: JSON.stringify({ 
+          mobileNumber,
+          role: 'patient' // Default role for login OTP
+        }),
       });
-      if (!response.ok) throw new Error('Failed to send OTP');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send OTP');
+      }
       return response.json();
     },
     onSuccess: (data) => {
       setOtpSent(true);
       toast({
-        title: "OTP Generated",
+        title: "✅ OTP Generated Successfully!",
         description: `OTP: ${data.otp} for ${data.mobileNumber}`,
-        duration: 15000, // Show longer for demo
+        duration: 30000, // Show longer for demo
+        className: "bg-green-50 border-green-200 text-green-800",
       });
+      // Also log to console for debugging
+      console.log('🔑 OTP Generated:', data.otp, 'for', data.mobileNumber);
     },
     onError: (error) => {
+      console.error('❌ OTP Send Error:', error);
+      setErrorMessage(`Failed to send OTP: ${error.message}`);
       toast({
-        title: "Failed to send OTP",
+        title: "❌ Failed to send OTP",
         description: error.message,
         variant: "destructive",
+        duration: 10000,
+        className: "bg-red-50 border-red-200 text-red-800",
       });
     },
   });
 
   const loginWithOtpMutation = useMutation({
     mutationFn: async ({ mobileNumber, otp }: { mobileNumber: string; otp: string }) => {
-      const response = await fetch('/api/auth/login/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobileNumber, otp }),
-      });
-      if (!response.ok) throw new Error('Invalid OTP');
-      return response.json();
+      return await authApi.loginWithOtp({ mobileNumber, otp });
     },
     onSuccess: (data) => {
+      console.log('🔍 OTP Login success - data:', data);
       setAuthToken(data.token);
+      console.log('🔍 OTP Token set, navigating to dashboard');
       toast({
         title: "Login successful",
         description: `Welcome back, ${data.user.fullName}!`,
       });
       setLocation("/dashboard");
-      window.location.reload();
     },
     onError: (error) => {
       toast({
@@ -113,6 +123,7 @@ export default function Login() {
       });
       return;
     }
+    setErrorMessage(""); // Clear previous error
     sendOtpMutation.mutate(formData.mobileNumber);
   };
 
@@ -121,28 +132,37 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-medical-blue to-blue-700 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md fade-in">
-        <CardContent className="pt-8">
-          <div className="text-center mb-8">
-            <div className="medical-blue rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Stethoscope className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">NexaCare</h1>
-            <p className="text-medical-gray">Secure Medical Management Platform</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4 py-8">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-4 shadow-lg">
+            <Stethoscope className="w-8 h-8 text-white" />
           </div>
+          <h1 className="text-2xl font-bold text-blue-600 mb-2">
+            NexaCare
+          </h1>
+          <p className="text-gray-600 text-sm">Welcome Back to Medical Excellence</p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 text-center">Sign In</h2>
+        {/* Login Form */}
+        <Card className="border-0 shadow-xl bg-white">
+          <CardContent className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Sign In</h2>
+              <p className="text-gray-600 text-sm">Choose your preferred login method</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Login Method Toggle */}
             <div className="flex rounded-lg border border-gray-200 p-1">
               <button
                 type="button"
                 onClick={() => setLoginMethod('password')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
                   loginMethod === 'password'
-                    ? 'bg-medical-blue text-white'
+                    ? 'bg-blue-600 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -152,9 +172,9 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setLoginMethod('otp')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
                   loginMethod === 'otp'
-                    ? 'bg-medical-blue text-white'
+                    ? 'bg-blue-600 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -173,7 +193,7 @@ export default function Login() {
                   placeholder="9876543210"
                   value={formData.mobileNumber}
                   onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-blue focus:border-transparent"
+                  className="h-10 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
                   required
                 />
               </div>
@@ -188,7 +208,7 @@ export default function Login() {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-blue focus:border-transparent"
+                    className="h-10 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
                     required
                   />
                 </div>
@@ -203,7 +223,7 @@ export default function Login() {
                       placeholder="Enter 6-digit OTP"
                       value={formData.otp}
                       onChange={(e) => handleInputChange("otp", e.target.value)}
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-blue focus:border-transparent"
+                      className="flex-1 h-10 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
                       required
                       maxLength={6}
                     />
@@ -211,7 +231,7 @@ export default function Login() {
                       type="button"
                       onClick={handleSendOtp}
                       disabled={sendOtpMutation.isPending || otpSent}
-                      className="px-4 py-3 bg-medical-green text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+                      className="px-4 h-10 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-all duration-200 disabled:opacity-50"
                     >
                       {sendOtpMutation.isPending ? "Sending..." : otpSent ? "Sent" : "Send OTP"}
                     </Button>
@@ -226,6 +246,26 @@ export default function Login() {
                       </p>
                     </div>
                   )}
+                  {errorMessage && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="text-sm text-red-800 font-medium">
+                            ❌ {errorMessage}
+                          </p>
+                          <p className="text-xs text-red-600 mt-1">
+                            Please check your mobile number and try again.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setErrorMessage("")}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -233,7 +273,7 @@ export default function Login() {
             <Button
               type="submit"
               disabled={loginMutation.isPending || loginWithOtpMutation.isPending}
-              className="w-full medical-blue py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-all duration-200"
             >
               {loginMutation.isPending || loginWithOtpMutation.isPending ? "Signing In..." : "Sign In"}
             </Button>
@@ -241,7 +281,7 @@ export default function Login() {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link href="/register" className="text-medical-blue hover:underline">
+                <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
                   Sign up
                 </Link>
               </p>
@@ -249,6 +289,7 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

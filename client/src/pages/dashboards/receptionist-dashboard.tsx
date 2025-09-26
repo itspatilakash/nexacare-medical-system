@@ -12,12 +12,10 @@ export default function ReceptionistDashboard() {
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
-    queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
   });
 
   const { data: appointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ['/api/appointments/my'],
-    queryFn: () => fetch('/api/appointments/my').then(res => res.json()),
   });
 
   const navigationItems = [
