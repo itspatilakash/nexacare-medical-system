@@ -1,6 +1,6 @@
 // server/services/auth.service.ts
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { users, otpVerifications } from '../../drizzle/schema';

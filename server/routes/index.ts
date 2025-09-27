@@ -12,6 +12,7 @@ import receptionRoutes from "./reception.routes";
 import appointmentsRoutes from "./appointments.routes";
 import availabilityRoutes from "./availability.routes";
 import prescriptionsRoutes from "./prescriptions.routes";
+import locationsRoutes from "./locations.routes";
 
 
 const router = Router();
@@ -33,6 +34,7 @@ export async function registerRoutes(app: Express) {
   app.use("/api/reception", receptionRoutes);
   app.use("/api/appointments", appointmentsRoutes);
   app.use("/api/doctors/availability", availabilityRoutes);
+  app.use("/api/locations", locationsRoutes);
   
   // Add missing endpoints that frontend expects - MUST be before specific route handlers
   app.get("/api/prescriptions/my", async (req, res) => {

@@ -23,7 +23,12 @@ const queryClient = new QueryClient();
 
 // Dashboard redirect component
 function DashboardRedirect() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  // Show loading while checking authentication
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
   
   if (!user) {
     return <Redirect to="/login" />;
@@ -31,16 +36,18 @@ function DashboardRedirect() {
   
   // Redirect based on user role
   switch (user.role) {
-    case 'patient':
+    case 'PATIENT':
       return <Redirect to="/dashboard/patient" />;
-    case 'doctor':
+    case 'DOCTOR':
       return <Redirect to="/dashboard/doctor" />;
-    case 'hospital':
+    case 'HOSPITAL':
       return <Redirect to="/dashboard/hospital" />;
-    case 'lab':
+    case 'LAB':
       return <Redirect to="/dashboard/lab" />;
-    case 'receptionist':
+    case 'RECEPTIONIST':
       return <Redirect to="/dashboard/receptionist" />;
+    case 'ADMIN':
+      return <Redirect to="/dashboard/hospital" />; // Admin can access hospital dashboard
     default:
       return <Redirect to="/dashboard/patient" />;
   }

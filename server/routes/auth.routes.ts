@@ -8,7 +8,7 @@ import {
   loginUser,
   sendLoginOtp,
   loginUserWithOtp,
-} from '../services/auth-simple';
+} from '../services/auth.service';
 import {
   registrationSchema,
   otpVerificationSchema,

@@ -37,7 +37,11 @@ export default function Login() {
       console.log('🔍 Login success - data:', data);
       setAuthToken(data.token);
       message.success(`Welcome back, ${data.user.fullName}!`);
-      setLocation("/dashboard");
+      
+      // Wait for auth context to update before redirecting
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 100);
     },
     onError: (error) => {
       message.error(error.message);
@@ -88,7 +92,11 @@ export default function Login() {
       console.log('🔍 OTP verification success:', data);
       setAuthToken(data.token);
       message.success(`Welcome, ${data.user.fullName}!`);
-      setLocation("/dashboard");
+      
+      // Wait for auth context to update before redirecting
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 100);
     },
     onError: (error) => {
       message.error(error.message);

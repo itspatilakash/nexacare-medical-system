@@ -12,7 +12,9 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
-    "seed": "tsx scripts/run-seed.ts"
+    "seed": "tsx scripts/run-seed.ts",
+    "seed:cities": "tsx scripts/seed-cities.ts",
+    "seed:maharashtra": "tsx scripts/seed-maharashtra-data.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",

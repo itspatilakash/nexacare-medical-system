@@ -47,8 +47,22 @@ const departments = [
   "Neurology", "Orthopedics", "Radiology", "Laboratory"
 ];
 
-const cities = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Hyderabad"];
-const states = ["Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Telangana"];
+const cities = [
+  "Mumbai", "Delhi", "Bangalore", "Chennai", "Hyderabad", "Pune", "Kolkata",
+  "Ahmedabad", "Jaipur", "Surat", "Lucknow", "Kanpur", "Nagpur", "Indore",
+  "Thane", "Bhopal", "Visakhapatnam", "Pimpri", "Patna", "Vadodara",
+  "Ghaziabad", "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut", "Rajkot",
+  "Kalyan", "Vasai", "Varanasi", "Srinagar", "Aurangabad", "Navi Mumbai",
+  "Solapur", "Vijayawada", "Kolhapur", "Amritsar", "Noida", "Ranchi", "Howrah"
+];
+
+const states = [
+  "Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Telangana", "West Bengal",
+  "Gujarat", "Rajasthan", "Uttar Pradesh", "Madhya Pradesh", "Bihar", "Andhra Pradesh",
+  "Punjab", "Haryana", "Jharkhand", "Odisha", "Assam", "Kerala", "Jammu and Kashmir",
+  "Himachal Pradesh", "Uttarakhand", "Chhattisgarh", "Goa", "Mizoram", "Manipur",
+  "Meghalaya", "Tripura", "Nagaland", "Arunachal Pradesh", "Sikkim"
+];
 
 // Helper functions
 function getRandomItem<T>(array: T[]): T {

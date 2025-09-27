@@ -1,45 +1,13 @@
-// server/db.ts - Mock database for demo purposes
+// server/db.ts - Real database connection
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "../shared/schema";
 
-// Mock database implementation for demo
-export const db = {
-  insert: (table: any) => ({
-    values: (data: any) => ({
-      returning: () => {
-        console.log(`📝 Mock DB: Inserted into ${table}`, data);
-        return [{ id: Math.random(), ...data, createdAt: new Date() }];
-      }
-    })
-  }),
-  
-  select: () => ({
-    from: (table: any) => ({
-      where: (condition: any) => ({
-        limit: (count: number) => {
-          console.log(`📝 Mock DB: Selected from ${table}`, { condition, limit: count });
-          return [];
-        },
-        orderBy: (field: any) => ({
-          limit: (count: number) => {
-            console.log(`📝 Mock DB: Selected from ${table}`, { condition, orderBy: field, limit: count });
-            return [];
-          }
-        })
-      })
-    })
-  }),
-  
-  update: (table: any) => ({
-    set: (data: any) => ({
-      where: (condition: any) => ({
-        returning: () => {
-          console.log(`📝 Mock DB: Updated ${table}`, { data, condition });
-          return [];
-        }
-      })
-    })
-  })
-};
+// Create database connection with fallback
+const connectionString = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_NQrYiJCf3kG0@ep-floral-fire-a1368kxn-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
-console.log('🗄️  Using mock database for demo purposes');
-console.log('📝 All data operations are logged to console');
+const sql = postgres(connectionString);
+export const db = drizzle(sql, { schema });
+
+console.log('🗄️  Connected to real PostgreSQL database');
+console.log('📝 Using Neon database for production data');

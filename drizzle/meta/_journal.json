@@ -15,6 +15,13 @@
       "when": 1758959328016,
       "tag": "0001_flowery_midnight",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758963173668,
+      "tag": "0002_thankful_unicorn",
+      "breakpoints": true
     }
   ]
 }

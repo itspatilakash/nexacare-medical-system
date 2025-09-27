@@ -13,6 +13,25 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// States table - Reference data for Indian states
+export const states = pgTable("states", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  country: text("country").default('India').notNull(),
+  iso2: text("iso2").default('IN').notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// Cities table - Reference data for Indian cities
+export const cities = pgTable("cities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  stateId: integer("state_id").references(() => states.id).notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 // Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -278,6 +297,14 @@ export const labReportsRelations = relations(labReports, ({ one }) => ({
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, { fields: [notifications.userId], references: [users.id] }),
+}));
+
+export const statesRelations = relations(states, ({ many }) => ({
+  cities: many(cities),
+}));
+
+export const citiesRelations = relations(cities, ({ one }) => ({
+  state: one(states, { fields: [cities.stateId], references: [states.id] }),
 }));
 
 // ZOD VALIDATION SCHEMAS
