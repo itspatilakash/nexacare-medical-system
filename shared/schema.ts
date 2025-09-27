@@ -165,7 +165,7 @@ export const prescriptions = pgTable("prescriptions", {
   doctorId: integer("doctor_id").references(() => doctors.id).notNull(),
   hospitalId: integer("hospital_id").references(() => hospitals.id).notNull(),
   diagnosis: text("diagnosis").notNull(),
-  medications: text("medications").notNull(),
+  medications: text("medications").notNull(), // JSON string with detailed medication info
   instructions: text("instructions"),
   followUpDate: timestamp("follow_up_date"),
   isActive: boolean("is_active").default(true),
@@ -318,6 +318,18 @@ export const insertPatientSchema = createInsertSchema(patients).omit({
   id: true,
   createdAt: true,
 });
+
+// Medication interface for detailed prescription
+export interface Medication {
+  name: string;
+  dosage: string;
+  frequency: string;
+  timing: string; // before/after meals, morning/evening, etc.
+  duration: string; // how long to take
+  instructions: string; // special instructions
+  quantity: number; // number of tablets/capsules
+  unit: string; // tablets, ml, mg, etc.
+}
 
 export const insertPrescriptionSchema = createInsertSchema(prescriptions).omit({
   id: true,

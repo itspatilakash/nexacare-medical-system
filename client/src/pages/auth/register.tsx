@@ -197,27 +197,115 @@ export default function Register() {
               )}
 
               {currentStep === 1 && (
+                <Form
+                  form={form}
+                  name="verify-otp"
+                  onFinish={async (values) => {
+                    setIsLoading(true);
+                    try {
+                      const response = await fetch('/api/auth/otp/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          mobileNumber: form.getFieldValue('mobileNumber'),
+                          otp: values.otp,
+                        }),
+                      });
+
+                      const data = await response.json();
+                      
+                      if (response.ok) {
+                        message.success('OTP verified successfully!');
+                        setCurrentStep(2);
+                      } else {
+                        message.error(data.message || 'OTP verification failed');
+                      }
+                    } catch (error) {
+                      console.error('OTP verification error:', error);
+                      message.error('OTP verification failed. Please try again.');
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  layout="vertical"
+                  size="large"
+                >
+                  <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                    <SafetyOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
+                    <Title level={3}>OTP Verification</Title>
+                    <Text type="secondary" style={{ marginBottom: '16px', display: 'block' }}>
+                      We've sent a 6-digit OTP to {form.getFieldValue('mobileNumber')}
+                    </Text>
+                    <Text code style={{ fontSize: '14px', padding: '8px 16px', background: '#f0f0f0' }}>
+                      Check console for OTP (Development Mode)
+                    </Text>
+                  </div>
+
+                  <Form.Item
+                    name="otp"
+                    label="Enter OTP"
+                    rules={[
+                      { required: true, message: 'Please enter the OTP' },
+                      { pattern: /^[0-9]{6}$/, message: 'Please enter a valid 6-digit OTP' }
+                    ]}
+                  >
+                    <Input
+                      prefix={<SafetyOutlined />}
+                      placeholder="Enter 6-digit OTP"
+                      className="medical-input"
+                      maxLength={6}
+                      style={{ textAlign: 'center', fontSize: '18px', letterSpacing: '4px' }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={isLoading}
+                        className="medical-button-primary"
+                        block
+                        size="large"
+                      >
+                        Verify OTP
+                      </Button>
+                      <Button
+                        type="link"
+                        onClick={() => setCurrentStep(0)}
+                        style={{ width: '100%' }}
+                      >
+                        Change Mobile Number
+                      </Button>
+                    </Space>
+                  </Form.Item>
+                </Form>
+              )}
+
+              {currentStep === 2 && (
                 <div style={{ textAlign: 'center' }}>
-                  <SafetyOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
-                  <Title level={3}>OTP Verification</Title>
+                  <SafetyOutlined style={{ fontSize: '64px', color: '#52c41a', marginBottom: '24px' }} />
+                  <Title level={3} style={{ color: '#52c41a' }}>
+                    Registration Complete!
+                  </Title>
                   <Text type="secondary" style={{ marginBottom: '24px', display: 'block' }}>
-                    We've sent a 6-digit OTP to your mobile number
+                    Welcome to NexaCare Medical System, {form.getFieldValue('fullName')}!
                   </Text>
-                  <Text code style={{ fontSize: '16px', padding: '8px 16px' }}>
-                    Check console for OTP (Development Mode)
+                  <Text type="secondary" style={{ display: 'block' }}>
+                    Redirecting to your dashboard...
                   </Text>
                   <div style={{ marginTop: '24px' }}>
-              <Button
+                    <Button
                       type="primary"
-                      onClick={() => setLocation('/otp-verification')}
+                      onClick={() => setLocation('/login')}
                       className="medical-button-primary"
                       size="large"
                     >
-                      Verify OTP
+                      Go to Login
                     </Button>
                   </div>
                 </div>
-                )}
+              )}
 
               <Divider />
 

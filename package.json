@@ -8,7 +8,11 @@
     "build:client": "cd client && npm run build",
     "build:server": "tsc --project tsconfig.server.json",
     "start": "node dist/server/index.js",
-    "preview": "npm run build && cross-env NODE_ENV=production node dist/server/index.js"
+    "preview": "npm run build && cross-env NODE_ENV=production node dist/server/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "seed": "tsx scripts/run-seed.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
@@ -23,6 +27,7 @@
     "morgan": "^1.10.0",
     "nanoid": "^5.1.5",
     "pg": "^8.11.1",
+    "postgres": "^3.4.7",
     "tsx": "^4.7.0",
     "ws": "^8.18.3",
     "zod": "^3.25.67"
@@ -41,7 +46,7 @@
     "concurrently": "^9.2.0",
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.31.4",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "^0.44.5",
     "tailwindcss-animate": "^1.0.7",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.7.0",

@@ -31,6 +31,7 @@ import {
   TeamOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/use-auth';
+import PrescriptionForm from '../../components/prescription-form';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -38,6 +39,7 @@ const { Title, Text } = Typography;
 export default function DoctorDashboard() {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
 
   // Get dashboard stats
   const { data: stats } = useQuery({
@@ -49,6 +51,16 @@ export default function DoctorDashboard() {
       pendingPrescriptions: 3,
       totalPrescriptions: 45
     })
+  });
+
+  // Get doctor profile to access hospitalId
+  const { data: doctorProfile } = useQuery({
+    queryKey: ['/api/doctors/profile'],
+    queryFn: async () => {
+      const response = await fetch('/api/doctors/profile');
+      return response.json();
+    },
+    enabled: !!user && user.role === 'DOCTOR',
   });
 
   // Get doctor appointments
@@ -142,6 +154,13 @@ export default function DoctorDashboard() {
     },
   ];
 
+  const handleMenuClick = ({ key }: { key: string }) => {
+    if (key === 'prescriptions') {
+      setIsPrescriptionModalOpen(true);
+    }
+    // Add other navigation handlers as needed
+  };
+
   const sidebarMenu = [
     {
       key: 'dashboard',
@@ -198,6 +217,7 @@ export default function DoctorDashboard() {
           defaultSelectedKeys={['dashboard']}
           items={sidebarMenu}
           style={{ border: 'none' }}
+          onClick={handleMenuClick}
         />
       </Sider>
 
@@ -288,7 +308,12 @@ export default function DoctorDashboard() {
       {/* Quick Actions */}
           <Card title="Quick Actions" style={{ marginBottom: '24px' }}>
             <Space wrap>
-              <Button type="primary" icon={<PlusOutlined />} size="large">
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                size="large"
+                onClick={() => setIsPrescriptionModalOpen(true)}
+              >
                 New Prescription
               </Button>
               <Button icon={<CalendarOutlined />} size="large">
@@ -353,6 +378,14 @@ export default function DoctorDashboard() {
           </Row>
         </Content>
       </Layout>
+
+      {/* Prescription Form Modal */}
+      <PrescriptionForm
+        isOpen={isPrescriptionModalOpen}
+        onClose={() => setIsPrescriptionModalOpen(false)}
+        doctorId={user?.id}
+        hospitalId={doctorProfile?.hospitalId}
+      />
     </Layout>
   );
 }

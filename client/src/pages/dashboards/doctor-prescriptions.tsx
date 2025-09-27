@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Layout, 
   Card, 
@@ -17,7 +18,10 @@ import {
   Modal,
   Form,
   Input,
-  Select
+  Select,
+  Table,
+  Popconfirm,
+  App
 } from 'antd';
 import { 
   UserOutlined, 
@@ -29,18 +33,26 @@ import {
   PlusOutlined,
   CheckCircleOutlined,
   DownloadOutlined,
-  UploadOutlined
+  UploadOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/use-auth';
+import PrescriptionForm from '../../components/prescription-form';
+import { apiRequest } from '../../lib/queryClient';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 export default function DoctorPrescriptionsPage() {
+  const { message } = App.useApp();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const userMenuItems = [
     {
@@ -77,27 +89,121 @@ export default function DoctorPrescriptionsPage() {
     },
   ];
 
-  // Mock prescription data
-  const prescriptions = [
+  // Fetch prescriptions data
+  const { data: prescriptions = [], isLoading, refetch } = useQuery({
+    queryKey: ['/api/prescriptions/doctor'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/prescriptions/doctor');
+      return response.json();
+    },
+  });
+
+  const handleEditPrescription = (prescription: any) => {
+    setSelectedPrescription(prescription);
+    setIsPrescriptionModalOpen(true);
+  };
+
+  const handleViewPrescription = (prescription: any) => {
+    setSelectedPrescription(prescription);
+    setIsViewModalOpen(true);
+  };
+
+  const handleDeletePrescription = async (prescriptionId: number) => {
+    try {
+      await apiRequest('DELETE', `/prescriptions/${prescriptionId}`);
+      message.success('Prescription deleted successfully');
+      refetch();
+    } catch (error) {
+      message.error('Failed to delete prescription');
+    }
+  };
+
+  const formatMedications = (medications: string) => {
+    try {
+      const meds = JSON.parse(medications);
+      return Array.isArray(meds) ? meds.map((med: any) => med.name).join(', ') : medications;
+    } catch {
+      return medications;
+    }
+  };
+
+  const columns = [
     {
-      id: 1,
-      patientName: "Jane Doe",
-      date: "2024-09-26",
-      medications: [
-        { name: "Paracetamol", dosage: "500mg", frequency: "3 times daily" },
-        { name: "Amoxicillin", dosage: "250mg", frequency: "2 times daily" }
-      ],
-      status: "active"
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 80,
     },
     {
-      id: 2,
-      patientName: "John Smith",
-      date: "2024-09-25",
-      medications: [
-        { name: "Ibuprofen", dosage: "400mg", frequency: "2 times daily" }
-      ],
-      status: "completed"
-    }
+      title: 'Patient',
+      dataIndex: 'patient',
+      key: 'patient',
+      render: (patient: any) => patient?.fullName || 'Unknown',
+    },
+    {
+      title: 'Diagnosis',
+      dataIndex: 'diagnosis',
+      key: 'diagnosis',
+      ellipsis: true,
+    },
+    {
+      title: 'Medications',
+      dataIndex: 'medications',
+      key: 'medications',
+      render: (medications: string) => formatMedications(medications),
+      ellipsis: true,
+    },
+    {
+      title: 'Date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (date: string) => new Date(date).toLocaleDateString(),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? 'green' : 'red'}>
+          {isActive ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 150,
+      render: (_, record: any) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewPrescription(record)}
+            title="View"
+          />
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEditPrescription(record)}
+            title="Edit"
+          />
+          <Popconfirm
+            title="Delete prescription?"
+            description="Are you sure you want to delete this prescription?"
+            onConfirm={() => handleDeletePrescription(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              title="Delete"
+            />
+          </Popconfirm>
+        </Space>
+      ),
+    },
   ];
 
   return (
@@ -227,92 +333,152 @@ export default function DoctorPrescriptionsPage() {
             </Col>
           </Row>
 
-          {/* Prescriptions List */}
+          {/* Prescriptions Table */}
           <Card title="Prescription Management">
-            <div>
-              {prescriptions.map((prescription) => (
-                <Card 
-                  key={prescription.id} 
-                  style={{ marginBottom: '16px' }}
-                  title={
-                    <Space>
-                      <FileTextOutlined />
-                      Prescription #{prescription.id}
-                    </Space>
-                  }
-                  extra={
-                    <Space>
-                      <Tag color={prescription.status === 'active' ? 'green' : 'blue'}>
-                        {prescription.status}
-                      </Tag>
-                      <Button type="primary" icon={<DownloadOutlined />}>
-                        Download
+            <Table
+              columns={columns}
+              dataSource={prescriptions}
+              loading={isLoading}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} prescriptions`,
+              }}
+            />
+          </Card>
+
+          {/* Prescription Form Modal */}
+          <PrescriptionForm
+            isOpen={isPrescriptionModalOpen}
+            onClose={() => {
+              setIsPrescriptionModalOpen(false);
+              setSelectedPrescription(null);
+            }}
+            prescription={selectedPrescription}
+            doctorId={user?.id}
+            hospitalId={user?.hospitalId}
+          />
+
+          {/* View Prescription Modal */}
+          <Modal
+            title="Prescription Details"
+            open={isViewModalOpen}
+            onCancel={() => {
+              setIsViewModalOpen(false);
+              setSelectedPrescription(null);
+            }}
+            footer={[
+              <Button key="close" onClick={() => {
+                setIsViewModalOpen(false);
+                setSelectedPrescription(null);
+              }}>
+                Close
                       </Button>
-                    </Space>
-                  }
-                >
-                  <Row gutter={[16, 16]}>
-                    <Col span={8}>
-                      <Text strong>Patient: </Text>
-                      <Text>{prescription.patientName}</Text>
+            ]}
+            width={700}
+          >
+            {selectedPrescription && (
+              <div>
+                <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                  <Col span={12}>
+                    <Text strong>Prescription ID:</Text> #{selectedPrescription.id}
+                  </Col>
+                  <Col span={12}>
+                    <Text strong>Date:</Text> {new Date(selectedPrescription.createdAt).toLocaleDateString()}
                     </Col>
-                    <Col span={8}>
-                      <Text strong>Date: </Text>
-                      <Text>{prescription.date}</Text>
+                </Row>
+                
+                <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                  <Col span={12}>
+                    <Text strong>Patient:</Text> {selectedPrescription.patient?.fullName || 'Unknown'}
                     </Col>
-                    <Col span={8}>
-                      <Text strong>Medications: </Text>
-                      <Text>{prescription.medications.length}</Text>
+                  <Col span={12}>
+                    <Text strong>Status:</Text> 
+                    <Tag color={selectedPrescription.isActive ? 'green' : 'red'} style={{ marginLeft: '8px' }}>
+                      {selectedPrescription.isActive ? 'Active' : 'Inactive'}
+                    </Tag>
                     </Col>
                   </Row>
                   
-                  <div style={{ marginTop: '16px' }}>
-                    <Title level={5}>Medications:</Title>
+                <div style={{ marginBottom: '24px' }}>
+                  <Text strong>Diagnosis:</Text>
+                  <div style={{ marginTop: '8px', padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                    {selectedPrescription.diagnosis}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <Text strong>Medications:</Text>
+                  <div style={{ marginTop: '8px' }}>
+                    {(() => {
+                      try {
+                        const medications = JSON.parse(selectedPrescription.medications);
+                        return Array.isArray(medications) ? (
                     <List
-                      dataSource={prescription.medications}
-                      renderItem={(medication) => (
+                            dataSource={medications}
+                            renderItem={(med: any) => (
                         <List.Item>
-                          <List.Item.Meta
-                            title={medication.name}
-                            description={`${medication.dosage} - ${medication.frequency}`}
-                          />
+                                <Card size="small" style={{ width: '100%' }}>
+                                  <Row gutter={[16, 8]}>
+                                    <Col span={24}>
+                                      <Text strong style={{ fontSize: '16px' }}>{med.name}</Text>
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Dosage:</Text> {med.dosage} {med.unit}
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Frequency:</Text> {med.frequency}
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Timing:</Text> {med.timing}
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Duration:</Text> {med.duration}
+                                    </Col>
+                                    {med.instructions && (
+                                      <Col span={24}>
+                                        <Text strong>Instructions:</Text> {med.instructions}
+                                      </Col>
+                                    )}
+                                  </Row>
+                                </Card>
                         </List.Item>
                       )}
                     />
+                        ) : (
+                          <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                            {selectedPrescription.medications}
+                          </div>
+                        );
+                      } catch {
+                        return (
+                          <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                            {selectedPrescription.medications}
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
-                </Card>
-              ))}
-            </div>
-          </Card>
+                </div>
 
-          {/* Prescription Modal */}
-          <Modal
-            title="Create New Prescription"
-            open={isPrescriptionModalOpen}
-            onCancel={() => setIsPrescriptionModalOpen(false)}
-            footer={null}
-            width={600}
-          >
-            <Form layout="vertical">
-              <Form.Item label="Patient" required>
-                <Select placeholder="Select patient">
-                  <Option value="jane">Jane Doe</Option>
-                  <Option value="john">John Smith</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item label="Medications" required>
-                <Input.TextArea placeholder="Enter medications and dosages" rows={4} />
-              </Form.Item>
-              <Form.Item label="Instructions">
-                <Input.TextArea placeholder="Special instructions" rows={3} />
-              </Form.Item>
-              <Form.Item>
-                <Space>
-                  <Button type="primary">Save Prescription</Button>
-                  <Button onClick={() => setIsPrescriptionModalOpen(false)}>Cancel</Button>
-                </Space>
-              </Form.Item>
-            </Form>
+                {selectedPrescription.instructions && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <Text strong>General Instructions:</Text>
+                    <div style={{ marginTop: '8px', padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                      {selectedPrescription.instructions}
+                    </div>
+            </div>
+                )}
+
+                {selectedPrescription.followUpDate && (
+                  <div>
+                    <Text strong>Follow-up Date:</Text> {new Date(selectedPrescription.followUpDate).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            )}
           </Modal>
         </Content>
       </Layout>

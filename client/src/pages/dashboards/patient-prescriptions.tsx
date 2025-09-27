@@ -15,7 +15,8 @@ import {
   Badge,
   Progress,
   Timeline,
-  List
+  List,
+  Modal
 } from 'antd';
 import { 
   UserOutlined, 
@@ -32,10 +33,13 @@ import {
   UserAddOutlined,
   BarChartOutlined,
   DownloadOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/use-auth';
 import { useState } from 'react';
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from '../../lib/queryClient';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -43,6 +47,8 @@ const { Title, Text } = Typography;
 export default function PatientPrescriptionsPage() {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const userMenuItems = [
     {
       key: 'profile',
@@ -78,27 +84,91 @@ export default function PatientPrescriptionsPage() {
     },
   ];
 
-  // Mock prescription data
-  const prescriptions = [
+  // Fetch prescriptions data
+  const { data: prescriptions = [], isLoading } = useQuery({
+    queryKey: ['/api/prescriptions/patient'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/prescriptions/patient');
+      return response.json();
+    },
+  });
+
+  const handleViewPrescription = (prescription: any) => {
+    setSelectedPrescription(prescription);
+    setIsViewModalOpen(true);
+  };
+
+  const formatMedications = (medications: string) => {
+    try {
+      const meds = JSON.parse(medications);
+      return Array.isArray(meds) ? meds.map((med: any) => med.name).join(', ') : medications;
+    } catch {
+      return medications;
+    }
+  };
+
+  const columns = [
     {
-      id: 1,
-      doctorName: "Dr. John Smith",
-      date: "2024-09-26",
-      medications: [
-        { name: "Paracetamol", dosage: "500mg", frequency: "3 times daily" },
-        { name: "Amoxicillin", dosage: "250mg", frequency: "2 times daily" }
-      ],
-      status: "active"
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 80,
     },
     {
-      id: 2,
-      doctorName: "Dr. Sarah Wilson",
-      date: "2024-09-20",
-      medications: [
-        { name: "Ibuprofen", dosage: "400mg", frequency: "2 times daily" }
-      ],
-      status: "completed"
-    }
+      title: 'Doctor',
+      dataIndex: 'doctor',
+      key: 'doctor',
+      render: (doctor: any) => doctor?.fullName || 'Unknown',
+    },
+    {
+      title: 'Diagnosis',
+      dataIndex: 'diagnosis',
+      key: 'diagnosis',
+      ellipsis: true,
+    },
+    {
+      title: 'Medications',
+      dataIndex: 'medications',
+      key: 'medications',
+      render: (medications: string) => formatMedications(medications),
+      ellipsis: true,
+    },
+    {
+      title: 'Date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (date: string) => new Date(date).toLocaleDateString(),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? 'green' : 'red'}>
+          {isActive ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 100,
+      render: (_, record: any) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewPrescription(record)}
+            title="View Details"
+          />
+          <Button
+            type="text"
+            icon={<DownloadOutlined />}
+            title="Download"
+          />
+        </Space>
+      ),
+    },
   ];
 
   return (
@@ -214,61 +284,141 @@ export default function PatientPrescriptionsPage() {
             </div>
           </Card>
 
-          {/* Prescriptions List */}
-          <div>
-            {prescriptions.map((prescription) => (
-              <Card 
-                key={prescription.id} 
-                style={{ marginBottom: '16px' }}
-                title={
-                  <Space>
-                    <FileTextOutlined />
-                    Prescription #{prescription.id}
-                  </Space>
-                }
-                extra={
-                  <Space>
-                    <Tag color={prescription.status === 'active' ? 'green' : 'blue'}>
-                      {prescription.status}
-                    </Tag>
-                    <Button type="primary" icon={<DownloadOutlined />}>
-                      Download
-                    </Button>
-                  </Space>
-                }
-              >
-                <Row gutter={[16, 16]}>
-                  <Col span={8}>
-                    <Text strong>Doctor: </Text>
-                    <Text>{prescription.doctorName}</Text>
+          {/* Prescriptions Table */}
+          <Card title="My Prescriptions">
+            <Table
+              columns={columns}
+              dataSource={prescriptions}
+              loading={isLoading}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} prescriptions`,
+              }}
+            />
+          </Card>
+
+          {/* View Prescription Modal */}
+          <Modal
+            title="Prescription Details"
+            open={isViewModalOpen}
+            onCancel={() => {
+              setIsViewModalOpen(false);
+              setSelectedPrescription(null);
+            }}
+            footer={[
+              <Button key="close" onClick={() => {
+                setIsViewModalOpen(false);
+                setSelectedPrescription(null);
+              }}>
+                Close
+              </Button>
+            ]}
+            width={700}
+          >
+            {selectedPrescription && (
+              <div>
+                <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                  <Col span={12}>
+                    <Text strong>Prescription ID:</Text> #{selectedPrescription.id}
                   </Col>
-                  <Col span={8}>
-                    <Text strong>Date: </Text>
-                    <Text>{prescription.date}</Text>
-                  </Col>
-                  <Col span={8}>
-                    <Text strong>Medications: </Text>
-                    <Text>{prescription.medications.length}</Text>
+                  <Col span={12}>
+                    <Text strong>Date:</Text> {new Date(selectedPrescription.createdAt).toLocaleDateString()}
                   </Col>
                 </Row>
                 
-                <div style={{ marginTop: '16px' }}>
-                  <Title level={5}>Medications:</Title>
-                  <List
-                    dataSource={prescription.medications}
-                    renderItem={(medication) => (
-                      <List.Item>
-                        <List.Item.Meta
-                          title={medication.name}
-                          description={`${medication.dosage} - ${medication.frequency}`}
-                        />
-                      </List.Item>
-                    )}
-                  />
+                <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                  <Col span={12}>
+                    <Text strong>Doctor:</Text> {selectedPrescription.doctor?.fullName || 'Unknown'}
+                  </Col>
+                  <Col span={12}>
+                    <Text strong>Status:</Text> 
+                    <Tag color={selectedPrescription.isActive ? 'green' : 'red'} style={{ marginLeft: '8px' }}>
+                      {selectedPrescription.isActive ? 'Active' : 'Inactive'}
+                    </Tag>
+                  </Col>
+                </Row>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <Text strong>Diagnosis:</Text>
+                  <div style={{ marginTop: '8px', padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                    {selectedPrescription.diagnosis}
+                  </div>
                 </div>
-              </Card>
-            ))}
-          </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <Text strong>Medications:</Text>
+                  <div style={{ marginTop: '8px' }}>
+                    {(() => {
+                      try {
+                        const medications = JSON.parse(selectedPrescription.medications);
+                        return Array.isArray(medications) ? (
+                          <List
+                            dataSource={medications}
+                            renderItem={(med: any) => (
+                              <List.Item>
+                                <Card size="small" style={{ width: '100%' }}>
+                                  <Row gutter={[16, 8]}>
+                                    <Col span={24}>
+                                      <Text strong style={{ fontSize: '16px' }}>{med.name}</Text>
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Dosage:</Text> {med.dosage} {med.unit}
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Frequency:</Text> {med.frequency}
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Timing:</Text> {med.timing}
+                                    </Col>
+                                    <Col span={12}>
+                                      <Text strong>Duration:</Text> {med.duration}
+                                    </Col>
+                                    {med.instructions && (
+                                      <Col span={24}>
+                                        <Text strong>Instructions:</Text> {med.instructions}
+                                      </Col>
+                                    )}
+                                  </Row>
+                                </Card>
+                              </List.Item>
+                            )}
+                          />
+                        ) : (
+                          <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                            {selectedPrescription.medications}
+                          </div>
+                        );
+                      } catch {
+                        return (
+                          <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                            {selectedPrescription.medications}
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+
+                {selectedPrescription.instructions && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <Text strong>General Instructions:</Text>
+                    <div style={{ marginTop: '8px', padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
+                      {selectedPrescription.instructions}
+                    </div>
+                  </div>
+                )}
+
+                {selectedPrescription.followUpDate && (
+                  <div>
+                    <Text strong>Follow-up Date:</Text> {new Date(selectedPrescription.followUpDate).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            )}
+          </Modal>
         </Content>
       </Layout>
     </Layout>
